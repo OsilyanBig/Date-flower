@@ -14,11 +14,7 @@
     min-height: 100vh;
     overflow: hidden;
   }
-  canvas {
-    display: block;
-    max-width: 100vw;
-    max-height: 100vh;
-  }
+  canvas { display: block; }
 </style>
 </head>
 <body>
@@ -31,11 +27,8 @@ let W, H, cx, cy, scale;
 let time = 0;
 let bloomProgress = 0;
 
-// Falling petals
 const fallingPetals = [];
-// Sparkles
 const sparkles = [];
-// Stars
 const stars = [];
 
 function resize() {
@@ -43,16 +36,26 @@ function resize() {
   H = canvas.height = window.innerHeight;
   cx = W / 2;
   cy = H / 2;
-  scale = Math.min(W / 800, H / 1000) * 0.9;
+  scale = Math.min(W / 800, H / 1000) * 0.88;
 
   stars.length = 0;
   for (let i = 0; i < 120; i++) {
     stars.push({
-      x: Math.random() * W,
-      y: Math.random() * H,
+      x: Math.random() * W, y: Math.random() * H,
       r: 0.5 + Math.random() * 1.5,
       speed: 0.3 + Math.random() * 0.7,
       phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  sparkles.length = 0;
+  for (let i = 0; i < 30; i++) {
+    sparkles.push({
+      x: cx + (-200 + Math.random() * 400) * scale,
+      y: cy + (-280 + Math.random() * 320) * scale,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.5 + Math.random() * 1.5,
+      size: 1 + Math.random() * 2.5
     });
   }
 }
@@ -60,55 +63,37 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// Init falling petals
 for (let i = 0; i < 20; i++) {
   fallingPetals.push({
-    x: Math.random() * W,
-    y: -20 - Math.random() * 600,
-    vx: -0.3 + Math.random() * 0.6,
-    vy: 0.5 + Math.random() * 1.5,
-    rot: Math.random() * Math.PI * 2,
-    rotSpeed: -0.02 + Math.random() * 0.04,
+    x: Math.random() * W, y: -20 - Math.random() * 600,
+    vx: -0.3 + Math.random() * 0.6, vy: 0.5 + Math.random() * 1.5,
+    rot: Math.random() * Math.PI * 2, rotSpeed: -0.02 + Math.random() * 0.04,
     size: 4 + Math.random() * 8,
     color: ['#c8324f','#d44060','#f080a8','#ffa0c0','#fff0f3'][Math.floor(Math.random()*5)],
     opacity: 0.3 + Math.random() * 0.5
   });
 }
 
-// Init sparkles
-for (let i = 0; i < 30; i++) {
-  sparkles.push({
-    x: cx + (-200 + Math.random() * 400) * scale,
-    y: cy + (-250 + Math.random() * 300) * scale,
-    phase: Math.random() * Math.PI * 2,
-    speed: 0.5 + Math.random() * 1.5,
-    size: 1 + Math.random() * 2.5
-  });
-}
+// ── Drawing helpers ──
 
-function drawPetal(x, y, w, h, angle, colors, shadowColor) {
+function drawPetal(x, y, w, h, angle, colors, shadowClr) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
-
-  // Shadow
-  ctx.shadowColor = shadowColor || 'rgba(30,5,15,0.3)';
+  ctx.shadowColor = shadowClr || 'rgba(30,5,15,0.3)';
   ctx.shadowBlur = 8;
   ctx.shadowOffsetY = 3;
-
   const grad = ctx.createRadialGradient(-w*0.1, -h*0.15, 0, 0, 0, Math.max(w, h));
   grad.addColorStop(0, colors[0]);
   grad.addColorStop(0.5, colors[1]);
   grad.addColorStop(1, colors[2]);
-
   ctx.fillStyle = grad;
   ctx.beginPath();
   ctx.moveTo(0, -h * 0.05);
-  ctx.bezierCurveTo(-w * 0.8, -h * 0.5, -w * 0.9, -h * 0.1, -w * 0.15, h * 0.45);
-  ctx.quadraticCurveTo(0, h * 0.55, w * 0.15, h * 0.45);
-  ctx.bezierCurveTo(w * 0.9, -h * 0.1, w * 0.8, -h * 0.5, 0, -h * 0.05);
+  ctx.bezierCurveTo(-w*0.8, -h*0.5, -w*0.9, -h*0.1, -w*0.15, h*0.45);
+  ctx.quadraticCurveTo(0, h*0.55, w*0.15, h*0.45);
+  ctx.bezierCurveTo(w*0.9, -h*0.1, w*0.8, -h*0.5, 0, -h*0.05);
   ctx.fill();
-
   ctx.shadowColor = 'transparent';
   ctx.restore();
 }
@@ -116,80 +101,58 @@ function drawPetal(x, y, w, h, angle, colors, shadowColor) {
 function drawRose(x, y, size, colorSet, bloom) {
   const s = size * bloom;
   if (s < 1) return;
-
   const layers = [
-    // Outer petals
-    { count: 5, radius: s * 0.9, petalW: s * 0.55, petalH: s * 0.65, colors: colorSet.outer },
-    // Mid petals
-    { count: 5, radius: s * 0.55, petalW: s * 0.42, petalH: s * 0.5, colors: colorSet.mid },
-    // Inner petals
-    { count: 4, radius: s * 0.3, petalW: s * 0.3, petalH: s * 0.38, colors: colorSet.inner },
-    // Core
-    { count: 3, radius: s * 0.12, petalW: s * 0.18, petalH: s * 0.22, colors: colorSet.core },
+    { count: 5, radius: s*0.9, petalW: s*0.55, petalH: s*0.65, colors: colorSet.outer },
+    { count: 5, radius: s*0.55, petalW: s*0.42, petalH: s*0.5, colors: colorSet.mid },
+    { count: 4, radius: s*0.3, petalW: s*0.3, petalH: s*0.38, colors: colorSet.inner },
+    { count: 3, radius: s*0.12, petalW: s*0.18, petalH: s*0.22, colors: colorSet.core },
   ];
-
   layers.forEach((layer, li) => {
     for (let i = 0; i < layer.count; i++) {
-      const angle = (Math.PI * 2 / layer.count) * i + li * 0.3 + Math.sin(time * 0.5) * 0.02;
-      const px = x + Math.cos(angle) * layer.radius * 0.35;
-      const py = y + Math.sin(angle) * layer.radius * 0.35;
-      drawPetal(px, py, layer.petalW, layer.petalH, angle + Math.PI * 0.5, layer.colors, colorSet.shadow);
+      const angle = (Math.PI*2/layer.count)*i + li*0.3 + Math.sin(time*0.5)*0.02;
+      drawPetal(
+        x + Math.cos(angle)*layer.radius*0.35,
+        y + Math.sin(angle)*layer.radius*0.35,
+        layer.petalW, layer.petalH, angle + Math.PI*0.5,
+        layer.colors, colorSet.shadow
+      );
     }
   });
-
-  // Center dot
-  const cg = ctx.createRadialGradient(x, y, 0, x, y, s * 0.08);
+  const cg = ctx.createRadialGradient(x, y, 0, x, y, s*0.08);
   cg.addColorStop(0, colorSet.center[0]);
   cg.addColorStop(1, colorSet.center[1]);
   ctx.fillStyle = cg;
   ctx.beginPath();
-  ctx.arc(x, y, s * 0.08, 0, Math.PI * 2);
+  ctx.arc(x, y, s*0.08, 0, Math.PI*2);
   ctx.fill();
 }
 
-// Rose color sets
 const redRose = {
-  outer: ['#ff6b8a', '#d43860', '#6b1530'],
-  mid: ['#e84878', '#c83050', '#5c1028'],
-  inner: ['#c03050', '#a02540', '#400d1c'],
-  core: ['#901838', '#601020', '#300810'],
-  center: ['#4a0d1e', '#200508'],
-  shadow: 'rgba(60,10,20,0.35)'
+  outer: ['#ff6b8a','#d43860','#6b1530'], mid: ['#e84878','#c83050','#5c1028'],
+  inner: ['#c03050','#a02540','#400d1c'], core: ['#901838','#601020','#300810'],
+  center: ['#4a0d1e','#200508'], shadow: 'rgba(60,10,20,0.35)'
 };
 const pinkRose = {
-  outer: ['#ffb0d0', '#f080a8', '#c05080'],
-  mid: ['#ffa0c0', '#e870a0', '#a04068'],
-  inner: ['#e06898', '#c05080', '#803050'],
-  core: ['#b04070', '#903058', '#602040'],
-  center: ['#803050', '#501830'],
-  shadow: 'rgba(80,20,40,0.3)'
+  outer: ['#ffb0d0','#f080a8','#c05080'], mid: ['#ffa0c0','#e870a0','#a04068'],
+  inner: ['#e06898','#c05080','#803050'], core: ['#b04070','#903058','#602040'],
+  center: ['#803050','#501830'], shadow: 'rgba(80,20,40,0.3)'
 };
 const whiteRose = {
-  outer: ['#ffffff', '#f0e8ea', '#d4c0c8'],
-  mid: ['#fff5f7', '#ecdce0', '#c8aab5'],
-  inner: ['#e8d0d8', '#d0b8c0', '#b89aa5'],
-  core: ['#d0b0b8', '#b898a2', '#a08090'],
-  center: ['#b89aa5', '#987888'],
-  shadow: 'rgba(60,30,40,0.25)'
+  outer: ['#ffffff','#f0e8ea','#d4c0c8'], mid: ['#fff5f7','#ecdce0','#c8aab5'],
+  inner: ['#e8d0d8','#d0b8c0','#b89aa5'], core: ['#d0b0b8','#b898a2','#a08090'],
+  center: ['#b89aa5','#987888'], shadow: 'rgba(60,30,40,0.25)'
 };
 
-// Bouquet rose positions (relative to center, before scaling)
 const rosePositions = [
-  // Center big red
   { dx: 0, dy: -80, size: 65, colors: redRose, delay: 0 },
-  // Upper left & right reds
   { dx: -90, dy: -120, size: 55, colors: redRose, delay: 0.1 },
   { dx: 90, dy: -120, size: 55, colors: redRose, delay: 0.15 },
-  // Pink roses
   { dx: -55, dy: -170, size: 48, colors: pinkRose, delay: 0.2 },
   { dx: 55, dy: -170, size: 48, colors: pinkRose, delay: 0.25 },
-  // White roses
   { dx: -130, dy: -70, size: 50, colors: whiteRose, delay: 0.3 },
   { dx: 130, dy: -70, size: 50, colors: whiteRose, delay: 0.35 },
-  // Lower fill reds
   { dx: -50, dy: -30, size: 45, colors: redRose, delay: 0.4 },
   { dx: 50, dy: -30, size: 45, colors: redRose, delay: 0.45 },
-  // Extra pinks
   { dx: 0, dy: -180, size: 42, colors: pinkRose, delay: 0.5 },
   { dx: -110, dy: -160, size: 40, colors: pinkRose, delay: 0.55 },
   { dx: 110, dy: -160, size: 40, colors: pinkRose, delay: 0.6 },
@@ -204,9 +167,7 @@ function drawStem(x1, y1, x2, y2, width) {
   ctx.lineCap = 'round';
   ctx.beginPath();
   ctx.moveTo(x1, y1);
-  const cpx = x1 + (x2 - x1) * 0.3 + Math.sin(time * 0.3) * 2;
-  const cpy = y1 + (y2 - y1) * 0.5;
-  ctx.quadraticCurveTo(cpx, cpy, x2, y2);
+  ctx.quadraticCurveTo(x1 + (x2-x1)*0.3 + Math.sin(time*0.3)*2, y1 + (y2-y1)*0.5, x2, y2);
   ctx.stroke();
 }
 
@@ -215,65 +176,49 @@ function drawLeaf(x, y, size, angle, flip) {
   ctx.translate(x, y);
   ctx.rotate(angle);
   if (flip) ctx.scale(-1, 1);
-
-  const grad = ctx.createRadialGradient(-size * 0.2, 0, 0, 0, 0, size);
+  const grad = ctx.createRadialGradient(-size*0.2, 0, 0, 0, 0, size);
   grad.addColorStop(0, '#45a040');
   grad.addColorStop(0.5, '#2d7530');
   grad.addColorStop(1, '#1a4d1e');
-
   ctx.fillStyle = grad;
   ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.bezierCurveTo(size * 0.3, -size * 0.5, size * 0.8, -size * 0.4, size, 0);
-  ctx.bezierCurveTo(size * 0.8, size * 0.4, size * 0.3, size * 0.5, 0, 0);
+  ctx.bezierCurveTo(size*0.3, -size*0.5, size*0.8, -size*0.4, size, 0);
+  ctx.bezierCurveTo(size*0.8, size*0.4, size*0.3, size*0.5, 0, 0);
   ctx.fill();
-
-  // Leaf vein
   ctx.strokeStyle = 'rgba(26,77,30,0.5)';
   ctx.lineWidth = 0.8;
   ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.lineTo(size * 0.9, 0);
+  ctx.lineTo(size*0.9, 0);
   ctx.stroke();
-
   for (let i = 1; i <= 3; i++) {
-    const vx = size * (i * 0.22);
-    ctx.beginPath();
-    ctx.moveTo(vx, 0);
-    ctx.lineTo(vx + size * 0.12, -size * 0.15);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(vx, 0);
-    ctx.lineTo(vx + size * 0.12, size * 0.15);
-    ctx.stroke();
+    const vx = size*(i*0.22);
+    ctx.beginPath(); ctx.moveTo(vx, 0); ctx.lineTo(vx+size*0.12, -size*0.15); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(vx, 0); ctx.lineTo(vx+size*0.12, size*0.15); ctx.stroke();
   }
-
   ctx.restore();
 }
 
 function drawBabysBreath(x, y, spread, count) {
   for (let i = 0; i < count; i++) {
-    const angle = (Math.PI * 2 / count) * i + Math.sin(time + i) * 0.1;
-    const dist = spread * (0.4 + Math.random() * 0.6);
-    const bx = x + Math.cos(angle) * dist;
-    const by = y + Math.sin(angle) * dist;
-    const r = 2 + Math.random() * 2.5;
-
-    // Tiny stem
+    const angle = (Math.PI*2/count)*i + Math.sin(time + i)*0.1;
+    const dist = spread*(0.4 + Math.random()*0.6);
+    const bx = x + Math.cos(angle)*dist;
+    const by = y + Math.sin(angle)*dist;
+    const r = 2 + Math.random()*2.5;
     ctx.strokeStyle = 'rgba(100,140,100,0.5)';
     ctx.lineWidth = 0.7;
     ctx.beginPath();
     ctx.moveTo(x, y + 10);
-    ctx.quadraticCurveTo((x + bx) / 2, (y + by) / 2 + 5, bx, by);
+    ctx.quadraticCurveTo((x+bx)/2, (y+by)/2 + 5, bx, by);
     ctx.stroke();
-
-    // Flower
     const fg = ctx.createRadialGradient(bx, by, 0, bx, by, r);
     fg.addColorStop(0, '#ffffff');
     fg.addColorStop(1, '#e8e0e4');
     ctx.fillStyle = fg;
     ctx.beginPath();
-    ctx.arc(bx, by, r, 0, Math.PI * 2);
+    ctx.arc(bx, by, r, 0, Math.PI*2);
     ctx.fill();
   }
 }
@@ -282,306 +227,332 @@ function drawEucalyptus(startX, startY, angle, length, leafCount) {
   ctx.save();
   ctx.translate(startX, startY);
   ctx.rotate(angle);
-
-  // Stem
   ctx.strokeStyle = '#5a8a5a';
   ctx.lineWidth = 1.8;
   ctx.beginPath();
   ctx.moveTo(0, 0);
   ctx.lineTo(0, -length);
   ctx.stroke();
-
   for (let i = 0; i < leafCount; i++) {
-    const ly = -(length / leafCount) * (i + 0.5);
-    const side = i % 2 === 0 ? 1 : -1;
-    const lsize = 12 - i * 0.8;
-    const langle = side * 0.6;
-
+    const ly = -(length/leafCount)*(i+0.5);
+    const side = i%2===0 ? 1 : -1;
+    const lsize = 12 - i*0.8;
     ctx.save();
     ctx.translate(0, ly);
-    ctx.rotate(langle);
-
+    ctx.rotate(side*0.6);
     const eg = ctx.createRadialGradient(0, 0, 0, 0, 0, lsize);
     eg.addColorStop(0, 'rgba(120,180,130,0.85)');
     eg.addColorStop(1, 'rgba(70,130,80,0.7)');
     ctx.fillStyle = eg;
-
     ctx.beginPath();
-    ctx.ellipse(side * 8, 0, lsize * 0.7, lsize * 0.45, 0, 0, Math.PI * 2);
+    ctx.ellipse(side*8, 0, lsize*0.7, lsize*0.45, 0, 0, Math.PI*2);
     ctx.fill();
-
     ctx.restore();
   }
-
   ctx.restore();
 }
 
+function drawDewDrop(x, y, r) {
+  const dg = ctx.createRadialGradient(x-r*0.25, y-r*0.25, 0, x, y, r);
+  dg.addColorStop(0, 'rgba(255,255,255,0.85)');
+  dg.addColorStop(0.4, 'rgba(255,255,255,0.3)');
+  dg.addColorStop(1, 'rgba(255,255,255,0.05)');
+  ctx.fillStyle = dg;
+  ctx.beginPath();
+  ctx.ellipse(x, y, r, r*1.2, 0.2, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.beginPath();
+  ctx.ellipse(x-r*0.3, y-r*0.35, r*0.3, r*0.2, -0.3, 0, Math.PI*2);
+  ctx.fill();
+}
+
+// ── WRAPPER ── (yeniden tasarlandı - zarif, katmanlı, yumuşak tonlar)
 function drawWrapper(bloom) {
   if (bloom < 0.1) return;
   const b = Math.min(bloom * 2, 1);
-
   ctx.save();
-  ctx.translate(cx, cy + 60 * scale);
+  ctx.translate(cx, cy + 55 * scale);
   ctx.scale(scale * b, scale * b);
 
-  // Back wrapper shadow
-  ctx.shadowColor = 'rgba(0,0,0,0.3)';
-  ctx.shadowBlur = 20;
-  ctx.shadowOffsetY = 10;
+  // Büyük dış gölge
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 15;
 
-  // Main wrapper (kraft paper cone)
-  const wg1 = ctx.createLinearGradient(-160, -80, 160, 300);
-  wg1.addColorStop(0, '#f5e6d0');
-  wg1.addColorStop(0.5, '#e8d4b8');
-  wg1.addColorStop(1, '#d4bc9a');
-
-  ctx.fillStyle = wg1;
+  // ── Arka katman (koyu pembe-mor tonu) ──
+  const backGrad = ctx.createLinearGradient(0, -80, 0, 400);
+  backGrad.addColorStop(0, '#e8c0cc');
+  backGrad.addColorStop(0.3, '#dda8b8');
+  backGrad.addColorStop(0.7, '#c8889a');
+  backGrad.addColorStop(1, '#b07080');
+  ctx.fillStyle = backGrad;
   ctx.beginPath();
-  ctx.moveTo(-170, -60);
-  ctx.quadraticCurveTo(-200, 50, -140, 320);
-  ctx.lineTo(0, 400);
-  ctx.lineTo(140, 320);
-  ctx.quadraticCurveTo(200, 50, 170, -60);
+  ctx.moveTo(-175, -55);
+  ctx.bezierCurveTo(-195, 40, -175, 180, -120, 340);
+  ctx.lineTo(0, 410);
+  ctx.lineTo(120, 340);
+  ctx.bezierCurveTo(175, 180, 195, 40, 175, -55);
   ctx.closePath();
   ctx.fill();
 
   ctx.shadowColor = 'transparent';
 
-  // Wrapper fold left
-  const wg2 = ctx.createLinearGradient(-170, -60, -100, 100);
-  wg2.addColorStop(0, 'rgba(248,240,225,0.6)');
-  wg2.addColorStop(1, 'rgba(200,180,150,0.3)');
-  ctx.fillStyle = wg2;
+  // ── Ana sarma kağıdı (zarif pembe-krem) ──
+  const mainGrad = ctx.createLinearGradient(-170, -60, 170, 400);
+  mainGrad.addColorStop(0, '#fce4ec');
+  mainGrad.addColorStop(0.25, '#f8d0da');
+  mainGrad.addColorStop(0.5, '#f0b8c8');
+  mainGrad.addColorStop(0.75, '#e8a0b5');
+  mainGrad.addColorStop(1, '#d88aa0');
+  ctx.fillStyle = mainGrad;
   ctx.beginPath();
-  ctx.moveTo(-170, -60);
-  ctx.quadraticCurveTo(-140, -80, -110, -50);
-  ctx.quadraticCurveTo(-130, 30, -150, 120);
-  ctx.quadraticCurveTo(-190, 40, -170, -60);
+  ctx.moveTo(-165, -50);
+  ctx.bezierCurveTo(-185, 50, -160, 190, -110, 330);
+  ctx.lineTo(0, 400);
+  ctx.lineTo(110, 330);
+  ctx.bezierCurveTo(160, 190, 185, 50, 165, -50);
+  ctx.closePath();
   ctx.fill();
 
-  // Wrapper fold right
-  const wg3 = ctx.createLinearGradient(100, -60, 170, 100);
-  wg3.addColorStop(0, 'rgba(248,240,225,0.6)');
-  wg3.addColorStop(1, 'rgba(200,180,150,0.3)');
-  ctx.fillStyle = wg3;
+  // ── Sol kıvrım (açık ton - parşömen efekti) ──
+  const foldL = ctx.createLinearGradient(-165, -50, -80, 150);
+  foldL.addColorStop(0, 'rgba(255,240,245,0.7)');
+  foldL.addColorStop(0.5, 'rgba(248,220,230,0.4)');
+  foldL.addColorStop(1, 'rgba(230,190,205,0.15)');
+  ctx.fillStyle = foldL;
   ctx.beginPath();
-  ctx.moveTo(170, -60);
-  ctx.quadraticCurveTo(140, -80, 110, -50);
-  ctx.quadraticCurveTo(130, 30, 150, 120);
-  ctx.quadraticCurveTo(190, 40, 170, -60);
+  ctx.moveTo(-165, -50);
+  ctx.quadraticCurveTo(-130, -75, -100, -45);
+  ctx.bezierCurveTo(-115, 20, -135, 90, -155, 160);
+  ctx.bezierCurveTo(-180, 80, -185, 10, -165, -50);
   ctx.fill();
 
-  // Tissue paper peeking
-  ctx.fillStyle = 'rgba(255,250,252,0.5)';
+  // ── Sağ kıvrım ──
+  const foldR = ctx.createLinearGradient(80, -50, 165, 150);
+  foldR.addColorStop(0, 'rgba(255,240,245,0.7)');
+  foldR.addColorStop(0.5, 'rgba(248,220,230,0.4)');
+  foldR.addColorStop(1, 'rgba(230,190,205,0.15)');
+  ctx.fillStyle = foldR;
   ctx.beginPath();
-  ctx.moveTo(-140, -65);
-  ctx.quadraticCurveTo(-80, -95, -30, -75);
-  ctx.quadraticCurveTo(0, -85, 30, -75);
-  ctx.quadraticCurveTo(80, -95, 140, -65);
-  ctx.quadraticCurveTo(100, -50, 0, -55);
-  ctx.quadraticCurveTo(-100, -50, -140, -65);
+  ctx.moveTo(165, -50);
+  ctx.quadraticCurveTo(130, -75, 100, -45);
+  ctx.bezierCurveTo(115, 20, 135, 90, 155, 160);
+  ctx.bezierCurveTo(180, 80, 185, 10, 165, -50);
   ctx.fill();
 
-  // Wrapper texture lines
-  ctx.strokeStyle = 'rgba(180,155,125,0.25)';
+  // ── Üst dalgalı kenar (tissue / krep kağıt efekti) ──
+  ctx.fillStyle = 'rgba(255,248,250,0.55)';
+  ctx.beginPath();
+  ctx.moveTo(-160, -50);
+  ctx.bezierCurveTo(-130, -90, -80, -70, -40, -85);
+  ctx.bezierCurveTo(0, -98, 40, -70, 80, -85);
+  ctx.bezierCurveTo(120, -95, 140, -80, 160, -50);
+  ctx.quadraticCurveTo(120, -40, 80, -48);
+  ctx.bezierCurveTo(40, -55, 0, -42, -40, -52);
+  ctx.bezierCurveTo(-80, -58, -120, -40, -160, -50);
+  ctx.fill();
+
+  // ── İç tissue katman (beyaz, hafif görünür) ──
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.beginPath();
+  ctx.moveTo(-140, -52);
+  ctx.bezierCurveTo(-100, -80, -50, -60, 0, -78);
+  ctx.bezierCurveTo(50, -92, 100, -75, 140, -52);
+  ctx.quadraticCurveTo(100, -45, 60, -50);
+  ctx.bezierCurveTo(20, -55, -20, -45, -60, -52);
+  ctx.bezierCurveTo(-100, -56, -120, -48, -140, -52);
+  ctx.fill();
+
+  // ── Zarif çizgi detayları (kağıt dokusu) ──
+  ctx.strokeStyle = 'rgba(200,150,165,0.18)';
   ctx.lineWidth = 0.8;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 6; i++) {
+    const yOff = 30 + i * 55;
+    const xShrink = i * 8;
     ctx.beginPath();
-    const yy = 20 + i * 55;
-    ctx.moveTo(-120 + i * 10, yy);
-    ctx.quadraticCurveTo(0, yy - 15 + i * 3, 120 - i * 10, yy);
+    ctx.moveTo(-130 + xShrink, yOff);
+    ctx.quadraticCurveTo(0, yOff - 10 + i*2, 130 - xShrink, yOff);
     ctx.stroke();
   }
+
+  // ── Kenar ışıltısı (highlight) ──
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-158, -40);
+  ctx.bezierCurveTo(-170, 30, -155, 120, -125, 280);
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.beginPath();
+  ctx.moveTo(158, -40);
+  ctx.bezierCurveTo(170, 30, 155, 120, 125, 280);
+  ctx.stroke();
+
+  // ── Alt kıvrım gölgesi ──
+  const bottomShadow = ctx.createLinearGradient(0, 350, 0, 410);
+  bottomShadow.addColorStop(0, 'rgba(150,80,100,0.15)');
+  bottomShadow.addColorStop(1, 'rgba(100,50,70,0.3)');
+  ctx.fillStyle = bottomShadow;
+  ctx.beginPath();
+  ctx.moveTo(-100, 330);
+  ctx.lineTo(0, 400);
+  ctx.lineTo(100, 330);
+  ctx.quadraticCurveTo(60, 370, 0, 380);
+  ctx.quadraticCurveTo(-60, 370, -100, 330);
+  ctx.fill();
 
   ctx.restore();
 }
 
+// ── RIBBON ──
 function drawRibbon(bloom) {
   if (bloom < 0.3) return;
   const b = Math.min((bloom - 0.3) / 0.7, 1);
-
   ctx.save();
-  ctx.translate(cx, cy + 60 * scale);
+  ctx.translate(cx, cy + 55 * scale);
   ctx.scale(scale, scale);
   ctx.globalAlpha = b;
 
   // Ribbon wraps
   const rg = ctx.createLinearGradient(-50, 0, 50, 0);
-  rg.addColorStop(0, '#d44070');
-  rg.addColorStop(0.5, '#c03060');
-  rg.addColorStop(1, '#a02048');
-
+  rg.addColorStop(0, '#c93a6a');
+  rg.addColorStop(0.5, '#b82d5c');
+  rg.addColorStop(1, '#a0204a');
   ctx.strokeStyle = rg;
   ctx.lineWidth = 14;
   ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(-60, -15);
-  ctx.quadraticCurveTo(0, -25, 60, -15);
+  ctx.moveTo(-65, -15);
+  ctx.quadraticCurveTo(0, -25, 65, -15);
   ctx.stroke();
-
   ctx.lineWidth = 11;
   ctx.beginPath();
-  ctx.moveTo(-55, 2);
-  ctx.quadraticCurveTo(0, -6, 55, 2);
+  ctx.moveTo(-58, 2);
+  ctx.quadraticCurveTo(0, -6, 58, 2);
   ctx.stroke();
 
   // Ribbon shine
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(-45, -18);
-  ctx.quadraticCurveTo(0, -26, 45, -18);
+  ctx.moveTo(-48, -18);
+  ctx.quadraticCurveTo(0, -26, 48, -18);
   ctx.stroke();
 
-  // Bow left loop
-  ctx.fillStyle = '#d44070';
+  // Bow left
   ctx.shadowColor = 'rgba(80,15,30,0.3)';
   ctx.shadowBlur = 8;
+  ctx.fillStyle = '#c93a6a';
   ctx.beginPath();
   ctx.moveTo(0, -20);
-  ctx.bezierCurveTo(-30, -40, -65, -55, -60, -65);
-  ctx.bezierCurveTo(-55, -75, -35, -70, -20, -55);
-  ctx.bezierCurveTo(-10, -45, 0, -30, 0, -20);
+  ctx.bezierCurveTo(-30, -40, -65, -55, -60, -68);
+  ctx.bezierCurveTo(-55, -78, -35, -72, -20, -58);
+  ctx.bezierCurveTo(-10, -46, 0, -32, 0, -20);
   ctx.fill();
 
-  // Bow right loop
-  ctx.fillStyle = '#c83868';
+  // Bow right
+  ctx.fillStyle = '#b83060';
   ctx.beginPath();
   ctx.moveTo(0, -20);
-  ctx.bezierCurveTo(30, -40, 65, -55, 60, -65);
-  ctx.bezierCurveTo(55, -75, 35, -70, 20, -55);
-  ctx.bezierCurveTo(10, -45, 0, -30, 0, -20);
+  ctx.bezierCurveTo(30, -40, 65, -55, 60, -68);
+  ctx.bezierCurveTo(55, -78, 35, -72, 20, -58);
+  ctx.bezierCurveTo(10, -46, 0, -32, 0, -20);
   ctx.fill();
-
   ctx.shadowColor = 'transparent';
 
   // Bow highlight
   ctx.strokeStyle = 'rgba(255,255,255,0.15)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(-5, -25);
-  ctx.bezierCurveTo(-25, -42, -50, -55, -48, -62);
+  ctx.moveTo(-5, -26);
+  ctx.bezierCurveTo(-25, -44, -50, -56, -48, -64);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(5, -25);
-  ctx.bezierCurveTo(25, -42, 50, -55, 48, -62);
+  ctx.moveTo(5, -26);
+  ctx.bezierCurveTo(25, -44, 50, -56, 48, -64);
   ctx.stroke();
 
   // Center knot
   const kg = ctx.createRadialGradient(-2, -22, 0, 0, -20, 12);
-  kg.addColorStop(0, '#e05080');
+  kg.addColorStop(0, '#d84878');
   kg.addColorStop(1, '#a02048');
   ctx.fillStyle = kg;
   ctx.beginPath();
-  ctx.ellipse(0, -20, 10, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, -20, 10, 8, 0, 0, Math.PI*2);
   ctx.fill();
-
-  // Knot highlight
   ctx.fillStyle = 'rgba(255,255,255,0.2)';
   ctx.beginPath();
-  ctx.ellipse(-3, -23, 3.5, 2, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(-3, -23, 3.5, 2, -0.3, 0, Math.PI*2);
   ctx.fill();
 
   // Ribbon tails
-  ctx.strokeStyle = '#c83868';
   ctx.lineWidth = 7;
   ctx.lineCap = 'round';
+  ctx.strokeStyle = '#b83060';
   ctx.beginPath();
   ctx.moveTo(-5, -12);
   ctx.quadraticCurveTo(-15, 30, -25, 80);
   ctx.stroke();
-
-  ctx.strokeStyle = '#d44070';
+  ctx.strokeStyle = '#c93a6a';
   ctx.beginPath();
   ctx.moveTo(5, -12);
   ctx.quadraticCurveTo(15, 30, 25, 80);
   ctx.stroke();
 
-  // V-cut tail ends
-  ctx.fillStyle = '#c83868';
+  // V-cut tails
+  ctx.fillStyle = '#b83060';
   ctx.beginPath();
-  ctx.moveTo(-29, 76);
-  ctx.lineTo(-35, 95);
-  ctx.lineTo(-25, 86);
-  ctx.lineTo(-15, 95);
-  ctx.lineTo(-21, 76);
-  ctx.fill();
-
-  ctx.fillStyle = '#d44070';
+  ctx.moveTo(-29, 76); ctx.lineTo(-35, 95); ctx.lineTo(-25, 86);
+  ctx.lineTo(-15, 95); ctx.lineTo(-21, 76); ctx.fill();
+  ctx.fillStyle = '#c93a6a';
   ctx.beginPath();
-  ctx.moveTo(21, 76);
-  ctx.lineTo(15, 95);
-  ctx.lineTo(25, 86);
-  ctx.lineTo(35, 95);
-  ctx.lineTo(29, 76);
-  ctx.fill();
+  ctx.moveTo(21, 76); ctx.lineTo(15, 95); ctx.lineTo(25, 86);
+  ctx.lineTo(35, 95); ctx.lineTo(29, 76); ctx.fill();
 
   ctx.globalAlpha = 1;
   ctx.restore();
 }
 
-function drawDewDrop(x, y, r) {
-  const dg = ctx.createRadialGradient(x - r * 0.25, y - r * 0.25, 0, x, y, r);
-  dg.addColorStop(0, 'rgba(255,255,255,0.85)');
-  dg.addColorStop(0.4, 'rgba(255,255,255,0.3)');
-  dg.addColorStop(1, 'rgba(255,255,255,0.05)');
-  ctx.fillStyle = dg;
-  ctx.beginPath();
-  ctx.ellipse(x, y, r, r * 1.2, 0.2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Highlight
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.beginPath();
-  ctx.ellipse(x - r * 0.3, y - r * 0.35, r * 0.3, r * 0.2, -0.3, 0, Math.PI * 2);
-  ctx.fill();
-}
-
+// ── BACKGROUND ──
 function drawBackground() {
-  // Dark gradient bg
-  const bg = ctx.createRadialGradient(cx, cy - 50, 50, cx, cy, Math.max(W, H) * 0.8);
+  const bg = ctx.createRadialGradient(cx, cy - 50, 50, cx, cy, Math.max(W,H)*0.8);
   bg.addColorStop(0, '#151020');
   bg.addColorStop(0.5, '#0e0c18');
   bg.addColorStop(1, '#060510');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Glow behind bouquet
-  const glow = ctx.createRadialGradient(cx, cy - 40 * scale, 0, cx, cy - 40 * scale, 250 * scale);
-  glow.addColorStop(0, `rgba(200,50,80,${0.12 + Math.sin(time * 0.8) * 0.04})`);
-  glow.addColorStop(0.5, `rgba(150,30,60,${0.06 + Math.sin(time * 0.8) * 0.02})`);
+  const glow = ctx.createRadialGradient(cx, cy - 40*scale, 0, cx, cy - 40*scale, 250*scale);
+  glow.addColorStop(0, `rgba(200,50,80,${0.12 + Math.sin(time*0.8)*0.04})`);
+  glow.addColorStop(0.5, `rgba(150,30,60,${0.06 + Math.sin(time*0.8)*0.02})`);
   glow.addColorStop(1, 'transparent');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
-  // Stars
   stars.forEach(s => {
-    const alpha = 0.15 + Math.sin(time * s.speed + s.phase) * 0.35 + 0.35;
+    const alpha = 0.15 + Math.sin(time*s.speed + s.phase)*0.35 + 0.35;
     ctx.fillStyle = `rgba(255,255,255,${alpha})`;
     ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
     ctx.fill();
   });
 }
 
 function drawFallingPetals() {
   fallingPetals.forEach(p => {
-    p.x += p.vx + Math.sin(time * 0.7 + p.rot) * 0.3;
+    p.x += p.vx + Math.sin(time*0.7 + p.rot)*0.3;
     p.y += p.vy;
     p.rot += p.rotSpeed;
-
-    if (p.y > H + 20) {
-      p.y = -20;
-      p.x = Math.random() * W;
-    }
-
+    if (p.y > H + 20) { p.y = -20; p.x = Math.random()*W; }
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(p.rot);
     ctx.globalAlpha = p.opacity;
     ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.ellipse(0, 0, p.size * 0.6, p.size, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, p.size*0.6, p.size, 0, 0, Math.PI*2);
     ctx.fill();
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -590,60 +561,47 @@ function drawFallingPetals() {
 
 function drawSparkles() {
   sparkles.forEach(s => {
-    const alpha = Math.max(0, Math.sin(time * s.speed + s.phase));
+    const alpha = Math.max(0, Math.sin(time*s.speed + s.phase));
     if (alpha < 0.05) return;
     const r = s.size * alpha;
-
     ctx.save();
     ctx.globalAlpha = alpha * 0.9;
-
-    // Glow
-    const sg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * 4);
+    const sg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r*4);
     sg.addColorStop(0, 'rgba(255,220,240,0.8)');
     sg.addColorStop(1, 'transparent');
     ctx.fillStyle = sg;
     ctx.beginPath();
-    ctx.arc(s.x, s.y, r * 4, 0, Math.PI * 2);
+    ctx.arc(s.x, s.y, r*4, 0, Math.PI*2);
     ctx.fill();
-
-    // Core
     ctx.fillStyle = '#fff';
     ctx.beginPath();
-    ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+    ctx.arc(s.x, s.y, r, 0, Math.PI*2);
     ctx.fill();
-
-    // Cross sparkle
-    ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.6})`;
+    ctx.strokeStyle = `rgba(255,255,255,${alpha*0.6})`;
     ctx.lineWidth = 0.8;
     ctx.beginPath();
-    ctx.moveTo(s.x - r * 3, s.y);
-    ctx.lineTo(s.x + r * 3, s.y);
-    ctx.moveTo(s.x, s.y - r * 3);
-    ctx.lineTo(s.x, s.y + r * 3);
+    ctx.moveTo(s.x - r*3, s.y); ctx.lineTo(s.x + r*3, s.y);
+    ctx.moveTo(s.x, s.y - r*3); ctx.lineTo(s.x, s.y + r*3);
     ctx.stroke();
-
     ctx.globalAlpha = 1;
     ctx.restore();
   });
 }
 
+// ── MAIN DRAW ──
 function draw() {
   time += 0.016;
   bloomProgress = Math.min(bloomProgress + 0.006, 1);
-
   const eased = bloomProgress < 0.5
-    ? 2 * bloomProgress * bloomProgress
-    : 1 - Math.pow(-2 * bloomProgress + 2, 2) / 2;
+    ? 2*bloomProgress*bloomProgress
+    : 1 - Math.pow(-2*bloomProgress + 2, 2)/2;
 
   ctx.clearRect(0, 0, W, H);
-
   drawBackground();
   drawFallingPetals();
 
-  // ---- BOUQUET ----
   ctx.save();
-  // Subtle breathing
-  const breathe = 1 + Math.sin(time * 0.7) * 0.008;
+  const breathe = 1 + Math.sin(time*0.7)*0.008;
   ctx.translate(cx, cy);
   ctx.scale(breathe, breathe);
   ctx.translate(-cx, -cy);
@@ -653,100 +611,80 @@ function draw() {
 
   // 2. Stems
   if (eased > 0.1) {
-    const stemAlpha = Math.min((eased - 0.1) / 0.3, 1);
-    ctx.globalAlpha = stemAlpha;
-
+    ctx.globalAlpha = Math.min((eased - 0.1)/0.3, 1);
     rosePositions.forEach(r => {
-      const rx = cx + r.dx * scale;
-      const ry = cy + (r.dy - 20) * scale;
-      const sx = cx + r.dx * 0.15 * scale;
-      const sy = cy + 100 * scale;
-      drawStem(rx, ry, sx, sy, 4 * scale);
+      drawStem(
+        cx + r.dx*scale, cy + (r.dy - 20)*scale,
+        cx + r.dx*0.15*scale, cy + 100*scale,
+        4*scale
+      );
     });
-
     ctx.globalAlpha = 1;
   }
 
   // 3. Eucalyptus
   if (eased > 0.2) {
-    const eAlpha = Math.min((eased - 0.2) / 0.3, 1);
-    ctx.globalAlpha = eAlpha;
-
-    drawEucalyptus(cx - 160 * scale, cy - 30 * scale, -0.5, 120 * scale, 7);
-    drawEucalyptus(cx + 160 * scale, cy - 30 * scale, 0.5, 120 * scale, 7);
-    drawEucalyptus(cx - 120 * scale, cy - 100 * scale, -0.7, 90 * scale, 5);
-    drawEucalyptus(cx + 120 * scale, cy - 100 * scale, 0.7, 90 * scale, 5);
-    drawEucalyptus(cx - 60 * scale, cy - 160 * scale, -0.3, 70 * scale, 4);
-    drawEucalyptus(cx + 60 * scale, cy - 160 * scale, 0.3, 70 * scale, 4);
-
+    ctx.globalAlpha = Math.min((eased - 0.2)/0.3, 1);
+    drawEucalyptus(cx - 160*scale, cy - 30*scale, -0.5, 120*scale, 7);
+    drawEucalyptus(cx + 160*scale, cy - 30*scale, 0.5, 120*scale, 7);
+    drawEucalyptus(cx - 120*scale, cy - 100*scale, -0.7, 90*scale, 5);
+    drawEucalyptus(cx + 120*scale, cy - 100*scale, 0.7, 90*scale, 5);
+    drawEucalyptus(cx - 60*scale, cy - 160*scale, -0.3, 70*scale, 4);
+    drawEucalyptus(cx + 60*scale, cy - 160*scale, 0.3, 70*scale, 4);
     ctx.globalAlpha = 1;
   }
 
   // 4. Leaves
   if (eased > 0.25) {
-    const lAlpha = Math.min((eased - 0.25) / 0.3, 1);
-    ctx.globalAlpha = lAlpha;
-
-    drawLeaf(cx - 100 * scale, cy - 20 * scale, 35 * scale, -0.8, false);
-    drawLeaf(cx + 100 * scale, cy - 20 * scale, 35 * scale, 0.8, true);
-    drawLeaf(cx - 70 * scale, cy + 20 * scale, 28 * scale, -0.5, false);
-    drawLeaf(cx + 70 * scale, cy + 20 * scale, 28 * scale, 0.5, true);
-    drawLeaf(cx - 140 * scale, cy - 60 * scale, 30 * scale, -1.0, false);
-    drawLeaf(cx + 140 * scale, cy - 60 * scale, 30 * scale, 1.0, true);
-    drawLeaf(cx - 40 * scale, cy - 120 * scale, 22 * scale, -0.4, false);
-    drawLeaf(cx + 40 * scale, cy - 120 * scale, 22 * scale, 0.4, true);
-
+    ctx.globalAlpha = Math.min((eased - 0.25)/0.3, 1);
+    drawLeaf(cx - 100*scale, cy - 20*scale, 35*scale, -0.8, false);
+    drawLeaf(cx + 100*scale, cy - 20*scale, 35*scale, 0.8, true);
+    drawLeaf(cx - 70*scale, cy + 20*scale, 28*scale, -0.5, false);
+    drawLeaf(cx + 70*scale, cy + 20*scale, 28*scale, 0.5, true);
+    drawLeaf(cx - 140*scale, cy - 60*scale, 30*scale, -1.0, false);
+    drawLeaf(cx + 140*scale, cy - 60*scale, 30*scale, 1.0, true);
+    drawLeaf(cx - 40*scale, cy - 120*scale, 22*scale, -0.4, false);
+    drawLeaf(cx + 40*scale, cy - 120*scale, 22*scale, 0.4, true);
     ctx.globalAlpha = 1;
   }
 
   // 5. Baby's breath
   if (eased > 0.3) {
-    const bbAlpha = Math.min((eased - 0.3) / 0.3, 1);
-    ctx.globalAlpha = bbAlpha;
-
-    drawBabysBreath(cx - 110 * scale, cy - 140 * scale, 25 * scale, 8);
-    drawBabysBreath(cx + 110 * scale, cy - 140 * scale, 25 * scale, 8);
-    drawBabysBreath(cx, cy - 200 * scale, 20 * scale, 6);
-    drawBabysBreath(cx - 60 * scale, cy - 50 * scale, 18 * scale, 5);
-    drawBabysBreath(cx + 60 * scale, cy - 50 * scale, 18 * scale, 5);
-    drawBabysBreath(cx - 150 * scale, cy - 100 * scale, 20 * scale, 6);
-    drawBabysBreath(cx + 150 * scale, cy - 100 * scale, 20 * scale, 6);
-
+    ctx.globalAlpha = Math.min((eased - 0.3)/0.3, 1);
+    drawBabysBreath(cx - 110*scale, cy - 140*scale, 25*scale, 8);
+    drawBabysBreath(cx + 110*scale, cy - 140*scale, 25*scale, 8);
+    drawBabysBreath(cx, cy - 200*scale, 20*scale, 6);
+    drawBabysBreath(cx - 60*scale, cy - 50*scale, 18*scale, 5);
+    drawBabysBreath(cx + 60*scale, cy - 50*scale, 18*scale, 5);
+    drawBabysBreath(cx - 150*scale, cy - 100*scale, 20*scale, 6);
+    drawBabysBreath(cx + 150*scale, cy - 100*scale, 20*scale, 6);
     ctx.globalAlpha = 1;
   }
 
-  // 6. Roses!
+  // 6. Roses
   rosePositions.forEach(r => {
-    const rBloom = Math.max(0, Math.min((eased - 0.2 - r.delay) / 0.5, 1));
+    const rBloom = Math.max(0, Math.min((eased - 0.2 - r.delay)/0.5, 1));
     if (rBloom <= 0) return;
-
-    const rx = cx + r.dx * scale;
-    const ry = cy + (r.dy - 20) * scale;
-    drawRose(rx, ry, r.size * scale, r.colors, rBloom);
+    drawRose(cx + r.dx*scale, cy + (r.dy - 20)*scale, r.size*scale, r.colors, rBloom);
   });
 
   // 7. Dew drops
   if (eased > 0.7) {
-    const dewAlpha = Math.min((eased - 0.7) / 0.3, 1);
-    ctx.globalAlpha = dewAlpha;
-
-    drawDewDrop(cx - 30 * scale, cy - 60 * scale, 3.5 * scale);
-    drawDewDrop(cx + 80 * scale, cy - 110 * scale, 3 * scale);
-    drawDewDrop(cx - 100 * scale, cy - 95 * scale, 2.8 * scale);
-    drawDewDrop(cx + 40 * scale, cy - 160 * scale, 2.5 * scale);
-    drawDewDrop(cx - 60 * scale, cy - 170 * scale, 2 * scale);
-
+    ctx.globalAlpha = Math.min((eased - 0.7)/0.3, 1);
+    drawDewDrop(cx - 30*scale, cy - 60*scale, 3.5*scale);
+    drawDewDrop(cx + 80*scale, cy - 110*scale, 3*scale);
+    drawDewDrop(cx - 100*scale, cy - 95*scale, 2.8*scale);
+    drawDewDrop(cx + 40*scale, cy - 160*scale, 2.5*scale);
+    drawDewDrop(cx - 60*scale, cy - 170*scale, 2*scale);
     ctx.globalAlpha = 1;
   }
 
-  // 8. Ribbon & bow
+  // 8. Ribbon
   drawRibbon(eased);
 
   ctx.restore();
 
-  // Sparkles on top
   drawSparkles();
-
   requestAnimationFrame(draw);
 }
 
