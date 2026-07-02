@@ -1,152 +1,765 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sana Bir Çiçek</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body, html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #f7a3b3; /* Resimdeki tatlı pembe arka plan tonu */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: sans-serif;
-        }
-
-        /* Çiçek Buketi Konteyneri */
-        .flower-container {
-            position: relative;
-            z-index: 10;
-            max-width: 90%;
-            max-height: 85vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            animation: float 4s ease-in-out infinite; /* Hafif yukarı aşağı süzülme efekti */
-        }
-
-        .flower-container img {
-            max-width: 100%;
-            max-height: 85vh;
-            object-fit: contain;
-            border-radius: 20px;
-            /* Buketin arkasına hafif bir ışıltı gölgesi */
-            filter: drop-shadow(0 10px 20px rgba(255, 255, 255, 0.3)); 
-        }
-
-        /* Partiküller için Canvas (Arka Plan) */
-        #particle-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        /* Çiçeğin hafifçe süzülme animasyonu */
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-15px);
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💐</title>
+<style>
+  * { margin: 0; padding: 0; }
+  body {
+    background: #0a0a12;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  canvas { display: block; }
+</style>
 </head>
 <body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
 
-    <canvas id="particle-canvas"></canvas>
+let W, H, cx, cy, scale;
+let time = 0;
+let bloomProgress = 0;
 
-    <div class="flower-container">
-        <img src="https://lh3.googleusercontent.com/d/1_x3V2M6L1vL660gqE0G0Q82HnUfRzIen" alt="Çiçek Buketi">
-    </div>
+const fallingPetals = [];
+const sparkles = [];
+const stars = [];
 
-    <script>
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  cx = W / 2;
+  cy = H / 2;
+  // Portrait mod için daha büyük scale
+  const isPortrait = H > W;
+  scale = isPortrait
+    ? Math.min(W / 600, H / 900) * 1.0
+    : Math.min(W / 900, H / 800) * 0.85;
 
-        let particlesArray = [];
-        const numberOfParticles = 70; // Ekrandaki parıltı sayısı
+  stars.length = 0;
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random() * W, y: Math.random() * H,
+      r: 0.5 + Math.random() * 1.5,
+      speed: 0.3 + Math.random() * 0.7,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
 
-        // Ekran boyutuna göre canvas'ı ayarla
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+  sparkles.length = 0;
+  for (let i = 0; i < 30; i++) {
+    sparkles.push({
+      x: cx + (-250 + Math.random() * 500) * scale,
+      y: cy + (-300 + Math.random() * 350) * scale,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.5 + Math.random() * 1.5,
+      size: 1 + Math.random() * 2.5
+    });
+  }
+}
 
-        // Partikül Sınıfı
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 4 + 1; // Küçük ve zarif parıltılar
-                this.speedX = Math.random() * 1 - 0.5; // Sağa sola hafif salınım
-                this.speedY = -(Math.random() * 1 + 0.5); // Yukarı doğru yavaşça yükselme
-                // Beyaz, açık pembe ve altın sarısı tonlarında parıltılar
-                const colors = ['rgba(255, 255, 255, 0.8)', 'rgba(255, 230, 235, 0.9)', 'rgba(255, 215, 0, 0.6)'];
-                this.color = colors[Math.floor(Math.random() * colors.length)];
-            }
+window.addEventListener('resize', resize);
+resize();
 
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
+for (let i = 0; i < 20; i++) {
+  fallingPetals.push({
+    x: Math.random() * W, y: -20 - Math.random() * 600,
+    vx: -0.3 + Math.random() * 0.6, vy: 0.5 + Math.random() * 1.5,
+    rot: Math.random() * Math.PI * 2, rotSpeed: -0.02 + Math.random() * 0.04,
+    size: 4 + Math.random() * 8,
+    color: ['#c8324f','#d44060','#f080a8','#ffa0c0','#fff0f3'][Math.floor(Math.random()*5)],
+    opacity: 0.3 + Math.random() * 0.5
+  });
+}
 
-                // Ekranın üstünden çıkan partikülü aşağıdan tekrar başlat
-                if (this.y < 0) {
-                    this.y = canvas.height;
-                    this.x = Math.random() * canvas.width;
-                }
-                if (this.x > canvas.width || this.x < 0) {
-                    this.speedX = -this.speedX;
-                }
-            }
+function drawPetal(x, y, w, h, angle, colors, shadowClr) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.shadowColor = shadowClr || 'rgba(30,5,15,0.3)';
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 3;
+  const grad = ctx.createRadialGradient(-w*0.1, -h*0.15, 0, 0, 0, Math.max(w, h));
+  grad.addColorStop(0, colors[0]);
+  grad.addColorStop(0.5, colors[1]);
+  grad.addColorStop(1, colors[2]);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(0, -h * 0.05);
+  ctx.bezierCurveTo(-w*0.8, -h*0.5, -w*0.9, -h*0.1, -w*0.15, h*0.45);
+  ctx.quadraticCurveTo(0, h*0.55, w*0.15, h*0.45);
+  ctx.bezierCurveTo(w*0.9, -h*0.1, w*0.8, -h*0.5, 0, -h*0.05);
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
 
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                // Parıltı efekti vermek için gölge ekliyoruz
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
-                ctx.fill();
-                ctx.shadowBlur = 0; // Diğer çizimleri etkilemesin diye sıfırlıyoruz
-            }
-        }
+function drawRose(x, y, size, colorSet, bloom) {
+  const s = size * bloom;
+  if (s < 1) return;
+  const layers = [
+    { count: 5, radius: s*0.9, petalW: s*0.55, petalH: s*0.65, colors: colorSet.outer },
+    { count: 5, radius: s*0.55, petalW: s*0.42, petalH: s*0.5, colors: colorSet.mid },
+    { count: 4, radius: s*0.3, petalW: s*0.3, petalH: s*0.38, colors: colorSet.inner },
+    { count: 3, radius: s*0.12, petalW: s*0.18, petalH: s*0.22, colors: colorSet.core },
+  ];
+  layers.forEach((layer, li) => {
+    for (let i = 0; i < layer.count; i++) {
+      const angle = (Math.PI*2/layer.count)*i + li*0.3 + Math.sin(time*0.5)*0.02;
+      drawPetal(
+        x + Math.cos(angle)*layer.radius*0.35,
+        y + Math.sin(angle)*layer.radius*0.35,
+        layer.petalW, layer.petalH, angle + Math.PI*0.5,
+        layer.colors, colorSet.shadow
+      );
+    }
+  });
+  const cg = ctx.createRadialGradient(x, y, 0, x, y, s*0.08);
+  cg.addColorStop(0, colorSet.center[0]);
+  cg.addColorStop(1, colorSet.center[1]);
+  ctx.fillStyle = cg;
+  ctx.beginPath();
+  ctx.arc(x, y, s*0.08, 0, Math.PI*2);
+  ctx.fill();
+}
 
-        // Partikül dizisini doldur
-        function init() {
-            particlesArray = [];
-            for (let i = 0; i < numberOfParticles; i++) {
-                particlesArray.push(new Particle());
-            }
-        }
+const redRose = {
+  outer: ['#ff6b8a','#d43860','#6b1530'], mid: ['#e84878','#c83050','#5c1028'],
+  inner: ['#c03050','#a02540','#400d1c'], core: ['#901838','#601020','#300810'],
+  center: ['#4a0d1e','#200508'], shadow: 'rgba(60,10,20,0.35)'
+};
+const pinkRose = {
+  outer: ['#ffb0d0','#f080a8','#c05080'], mid: ['#ffa0c0','#e870a0','#a04068'],
+  inner: ['#e06898','#c05080','#803050'], core: ['#b04070','#903058','#602040'],
+  center: ['#803050','#501830'], shadow: 'rgba(80,20,40,0.3)'
+};
+const whiteRose = {
+  outer: ['#ffffff','#f0e8ea','#d4c0c8'], mid: ['#fff5f7','#ecdce0','#c8aab5'],
+  inner: ['#e8d0d8','#d0b8c0','#b89aa5'], core: ['#d0b0b8','#b898a2','#a08090'],
+  center: ['#b89aa5','#987888'], shadow: 'rgba(60,30,40,0.25)'
+};
+const creamRose = {
+  outer: ['#fff8e8','#f5e8c8','#d8c090'], mid: ['#fff0d8','#f0dcb0','#c8ac80'],
+  inner: ['#f0dcb0','#d8c090','#a88860'], core: ['#c8a878','#a08858','#705838'],
+  center: ['#8c7048','#503820'], shadow: 'rgba(80,55,25,0.3)'
+};
 
-        // Animasyon döngüsü
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particlesArray.length; i++) {
-                particlesArray[i].update();
-                particlesArray[i].draw();
-            }
-            requestAnimationFrame(animate);
-        }
+const rosePositions = [
+  { dx: 0, dy: -90, size: 75, colors: pinkRose, delay: 0 },
+  { dx: -95, dy: -130, size: 62, colors: whiteRose, delay: 0.1 },
+  { dx: 95, dy: -130, size: 62, colors: whiteRose, delay: 0.15 },
+  { dx: -60, dy: -180, size: 55, colors: creamRose, delay: 0.2 },
+  { dx: 60, dy: -180, size: 55, colors: creamRose, delay: 0.25 },
+  { dx: -140, dy: -75, size: 58, colors: pinkRose, delay: 0.3 },
+  { dx: 140, dy: -75, size: 58, colors: whiteRose, delay: 0.35 },
+  { dx: -55, dy: -35, size: 52, colors: creamRose, delay: 0.4 },
+  { dx: 55, dy: -35, size: 52, colors: pinkRose, delay: 0.45 },
+  { dx: 0, dy: -195, size: 48, colors: whiteRose, delay: 0.5 },
+  { dx: -115, dy: -170, size: 45, colors: pinkRose, delay: 0.55 },
+  { dx: 115, dy: -170, size: 45, colors: creamRose, delay: 0.6 },
+];
 
-        init();
-        animate();
-    </script>
+function drawStem(x1, y1, x2, y2, width) {
+  const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+  grad.addColorStop(0, '#2d7530');
+  grad.addColorStop(1, '#1a4d1e');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = width;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.quadraticCurveTo(x1 + (x2-x1)*0.3 + Math.sin(time*0.3)*2, y1 + (y2-y1)*0.5, x2, y2);
+  ctx.stroke();
+}
+
+function drawLeaf(x, y, size, angle, flip) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  if (flip) ctx.scale(-1, 1);
+  const grad = ctx.createRadialGradient(-size*0.2, 0, 0, 0, 0, size);
+  grad.addColorStop(0, '#45a040');
+  grad.addColorStop(0.5, '#2d7530');
+  grad.addColorStop(1, '#1a4d1e');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(size*0.3, -size*0.5, size*0.8, -size*0.4, size, 0);
+  ctx.bezierCurveTo(size*0.8, size*0.4, size*0.3, size*0.5, 0, 0);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(26,77,30,0.5)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(size*0.9, 0);
+  ctx.stroke();
+  for (let i = 1; i <= 3; i++) {
+    const vx = size*(i*0.22);
+    ctx.beginPath(); ctx.moveTo(vx, 0); ctx.lineTo(vx+size*0.12, -size*0.15); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(vx, 0); ctx.lineTo(vx+size*0.12, size*0.15); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawBabysBreath(x, y, spread, count) {
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI*2/count)*i + Math.sin(time + i)*0.1;
+    const dist = spread*(0.4 + Math.random()*0.6);
+    const bx = x + Math.cos(angle)*dist;
+    const by = y + Math.sin(angle)*dist;
+    const r = 2 + Math.random()*2.5;
+    ctx.strokeStyle = 'rgba(100,140,100,0.5)';
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 10);
+    ctx.quadraticCurveTo((x+bx)/2, (y+by)/2 + 5, bx, by);
+    ctx.stroke();
+    const fg = ctx.createRadialGradient(bx, by, 0, bx, by, r);
+    fg.addColorStop(0, '#ffffff');
+    fg.addColorStop(1, '#e8e0e4');
+    ctx.fillStyle = fg;
+    ctx.beginPath();
+    ctx.arc(bx, by, r, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawEucalyptus(startX, startY, angle, length, leafCount) {
+  ctx.save();
+  ctx.translate(startX, startY);
+  ctx.rotate(angle);
+  ctx.strokeStyle = '#5a8a5a';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, -length);
+  ctx.stroke();
+  for (let i = 0; i < leafCount; i++) {
+    const ly = -(length/leafCount)*(i+0.5);
+    const side = i%2===0 ? 1 : -1;
+    const lsize = 12 - i*0.8;
+    ctx.save();
+    ctx.translate(0, ly);
+    ctx.rotate(side*0.6);
+    const eg = ctx.createRadialGradient(0, 0, 0, 0, 0, lsize);
+    eg.addColorStop(0, 'rgba(120,180,130,0.85)');
+    eg.addColorStop(1, 'rgba(70,130,80,0.7)');
+    ctx.fillStyle = eg;
+    ctx.beginPath();
+    ctx.ellipse(side*8, 0, lsize*0.7, lsize*0.45, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawDewDrop(x, y, r) {
+  const dg = ctx.createRadialGradient(x-r*0.25, y-r*0.25, 0, x, y, r);
+  dg.addColorStop(0, 'rgba(255,255,255,0.85)');
+  dg.addColorStop(0.4, 'rgba(255,255,255,0.3)');
+  dg.addColorStop(1, 'rgba(255,255,255,0.05)');
+  ctx.fillStyle = dg;
+  ctx.beginPath();
+  ctx.ellipse(x, y, r, r*1.2, 0.2, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.beginPath();
+  ctx.ellipse(x-r*0.3, y-r*0.35, r*0.3, r*0.2, -0.3, 0, Math.PI*2);
+  ctx.fill();
+}
+
+// ── YAPRAK YAPRAK SARMA KAĞIDI (Lotus stili) ──
+// Tek bir kağıt yaprağı çizer
+function drawWrapSheet(cx0, cy0, angle, length, width, colorSet, layer) {
+  ctx.save();
+  ctx.translate(cx0, cy0);
+  ctx.rotate(angle);
+
+  // Gölge
+  ctx.shadowColor = 'rgba(0,0,0,0.25)';
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 4;
+
+  // Kağıt yaprağı - eşkenar dörtgen benzeri, sivri uçlu
+  const grad = ctx.createLinearGradient(0, 0, 0, -length);
+  grad.addColorStop(0, colorSet[0]);
+  grad.addColorStop(0.5, colorSet[1]);
+  grad.addColorStop(1, colorSet[2]);
+  ctx.fillStyle = grad;
+
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(-width * 0.7, -length * 0.3);
+  ctx.lineTo(-width * 0.5, -length * 0.75);
+  ctx.lineTo(0, -length);
+  ctx.lineTo(width * 0.5, -length * 0.75);
+  ctx.lineTo(width * 0.7, -length * 0.3);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.shadowColor = 'transparent';
+
+  // İç highlight (parlak katlanma çizgisi)
+  const shineGrad = ctx.createLinearGradient(-width*0.3, 0, width*0.3, -length);
+  shineGrad.addColorStop(0, 'rgba(255,255,255,0)');
+  shineGrad.addColorStop(0.5, 'rgba(255,255,255,0.35)');
+  shineGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = shineGrad;
+  ctx.beginPath();
+  ctx.moveTo(-width*0.15, -length*0.1);
+  ctx.lineTo(-width*0.05, -length*0.7);
+  ctx.lineTo(0, -length*0.95);
+  ctx.lineTo(width*0.05, -length*0.7);
+  ctx.lineTo(width*0.15, -length*0.1);
+  ctx.closePath();
+  ctx.fill();
+
+  // Merkez kıvrım çizgisi
+  ctx.strokeStyle = 'rgba(200,150,170,0.3)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(0, -length*0.05);
+  ctx.lineTo(0, -length*0.95);
+  ctx.stroke();
+
+  // Kenar highlights
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-width * 0.68, -length * 0.3);
+  ctx.lineTo(-width * 0.48, -length * 0.75);
+  ctx.lineTo(-2, -length * 0.98);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawWrapper(bloom) {
+  if (bloom < 0.1) return;
+  const b = Math.min(bloom * 1.5, 1);
+
+  const bouquetX = cx;
+  const bouquetY = cy - 30 * scale;
+
+  // ── ARKA KATMAN - Büyük yapraklar (koyu pembe) ──
+  const backColors = ['#f5b8c8', '#e89bb0', '#d47f98'];
+  const backSheets = [
+    { angle: -1.35, length: 320, width: 180 },
+    { angle: -0.85, length: 340, width: 190 },
+    { angle: -0.3, length: 350, width: 200 },
+    { angle: 0.3, length: 350, width: 200 },
+    { angle: 0.85, length: 340, width: 190 },
+    { angle: 1.35, length: 320, width: 180 },
+  ];
+
+  backSheets.forEach((s, i) => {
+    const delay = i * 0.05;
+    const sb = Math.max(0, Math.min((b - delay) / 0.4, 1));
+    if (sb <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = sb;
+    drawWrapSheet(
+      bouquetX, bouquetY,
+      s.angle, s.length * scale * sb, s.width * scale,
+      backColors, 0
+    );
+    ctx.restore();
+  });
+
+  // ── ÖN KATMAN - Daha küçük yapraklar (açık pembe) ──
+  const frontColors = ['#ffe0e8', '#fac8d6', '#f0a8bd'];
+  const frontSheets = [
+    { angle: -1.15, length: 240, width: 140 },
+    { angle: -0.65, length: 260, width: 150 },
+    { angle: -0.15, length: 270, width: 155 },
+    { angle: 0.15, length: 270, width: 155 },
+    { angle: 0.65, length: 260, width: 150 },
+    { angle: 1.15, length: 240, width: 140 },
+  ];
+
+  frontSheets.forEach((s, i) => {
+    const delay = 0.2 + i * 0.04;
+    const sb = Math.max(0, Math.min((b - delay) / 0.4, 1));
+    if (sb <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = sb;
+    drawWrapSheet(
+      bouquetX, bouquetY,
+      s.angle, s.length * scale * sb, s.width * scale,
+      frontColors, 1
+    );
+    ctx.restore();
+  });
+
+  // ── ALT SAP KISMI - Koni şeklinde ──
+  if (b > 0.5) {
+    const coneBloom = Math.min((b - 0.5) / 0.5, 1);
+    ctx.save();
+    ctx.globalAlpha = coneBloom;
+    ctx.translate(cx, cy + 40 * scale);
+    ctx.scale(scale, scale);
+
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetY = 10;
+
+    // Koni (ana)
+    const coneGrad = ctx.createLinearGradient(-40, 0, 40, 200);
+    coneGrad.addColorStop(0, '#ffe0e8');
+    coneGrad.addColorStop(0.5, '#f5c0d0');
+    coneGrad.addColorStop(1, '#e0a0b8');
+    ctx.fillStyle = coneGrad;
+    ctx.beginPath();
+    ctx.moveTo(-70, 0);
+    ctx.lineTo(-45, 180);
+    ctx.lineTo(0, 220);
+    ctx.lineTo(45, 180);
+    ctx.lineTo(70, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.shadowColor = 'transparent';
+
+    // Sol kıvrım (kağıt katlanması)
+    const foldL = ctx.createLinearGradient(-70, 0, -30, 100);
+    foldL.addColorStop(0, 'rgba(255,240,245,0.5)');
+    foldL.addColorStop(1, 'rgba(220,180,195,0.1)');
+    ctx.fillStyle = foldL;
+    ctx.beginPath();
+    ctx.moveTo(-70, 0);
+    ctx.quadraticCurveTo(-55, 60, -45, 180);
+    ctx.lineTo(-20, 200);
+    ctx.quadraticCurveTo(-35, 100, -40, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sağ kıvrım
+    const foldR = ctx.createLinearGradient(70, 0, 30, 100);
+    foldR.addColorStop(0, 'rgba(255,240,245,0.5)');
+    foldR.addColorStop(1, 'rgba(220,180,195,0.1)');
+    ctx.fillStyle = foldR;
+    ctx.beginPath();
+    ctx.moveTo(70, 0);
+    ctx.quadraticCurveTo(55, 60, 45, 180);
+    ctx.lineTo(20, 200);
+    ctx.quadraticCurveTo(35, 100, 40, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Merkez katlanma
+    ctx.strokeStyle = 'rgba(200,150,170,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 5);
+    ctx.lineTo(0, 210);
+    ctx.stroke();
+
+    // Alt uç highlight
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-65, 5);
+    ctx.quadraticCurveTo(-50, 90, -43, 175);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+}
+
+// ── RIBBON (uzun beyaz-pembe kuyruk) ──
+function drawRibbon(bloom) {
+  if (bloom < 0.6) return;
+  const b = Math.min((bloom - 0.6) / 0.4, 1);
+  ctx.save();
+  ctx.translate(cx, cy + 55 * scale);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = b;
+
+  // Kurdele wrap
+  const rg = ctx.createLinearGradient(-50, 0, 50, 0);
+  rg.addColorStop(0, '#e890a8');
+  rg.addColorStop(0.5, '#d47090');
+  rg.addColorStop(1, '#b85878');
+  ctx.strokeStyle = rg;
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-45, -10);
+  ctx.quadraticCurveTo(0, -18, 45, -10);
+  ctx.stroke();
+
+  // Shine
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-35, -13);
+  ctx.quadraticCurveTo(0, -20, 35, -13);
+  ctx.stroke();
+
+  // Bow left (küçük fiyonk)
+  ctx.shadowColor = 'rgba(120,50,70,0.25)';
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = '#e890a8';
+  ctx.beginPath();
+  ctx.moveTo(0, -15);
+  ctx.bezierCurveTo(-20, -30, -45, -40, -42, -50);
+  ctx.bezierCurveTo(-38, -58, -22, -52, -12, -42);
+  ctx.bezierCurveTo(-6, -33, 0, -22, 0, -15);
+  ctx.fill();
+
+  ctx.fillStyle = '#d47090';
+  ctx.beginPath();
+  ctx.moveTo(0, -15);
+  ctx.bezierCurveTo(20, -30, 45, -40, 42, -50);
+  ctx.bezierCurveTo(38, -58, 22, -52, 12, -42);
+  ctx.bezierCurveTo(6, -33, 0, -22, 0, -15);
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+
+  // Knot
+  const kg = ctx.createRadialGradient(-2, -17, 0, 0, -15, 10);
+  kg.addColorStop(0, '#f0a0b8');
+  kg.addColorStop(1, '#b85878');
+  ctx.fillStyle = kg;
+  ctx.beginPath();
+  ctx.ellipse(0, -15, 8, 6, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(-2, -17, 3, 1.5, -0.3, 0, Math.PI*2);
+  ctx.fill();
+
+  // ── UZUN BEYAZ SATEN KURDELELER (2 tane, aşağıya sarkan) ──
+  // Beyaz saten kuyruk 1
+  const satinGrad1 = ctx.createLinearGradient(-15, 0, 15, 150);
+  satinGrad1.addColorStop(0, '#ffffff');
+  satinGrad1.addColorStop(0.5, '#fce8ee');
+  satinGrad1.addColorStop(1, '#f0d0dc');
+  ctx.fillStyle = satinGrad1;
+  ctx.beginPath();
+  ctx.moveTo(-8, -8);
+  ctx.quadraticCurveTo(-18, 50, -22, 130);
+  ctx.lineTo(-14, 132);
+  ctx.quadraticCurveTo(-10, 55, -2, -6);
+  ctx.closePath();
+  ctx.fill();
+
+  // Beyaz saten kuyruk 2
+  const satinGrad2 = ctx.createLinearGradient(-5, 0, 25, 150);
+  satinGrad2.addColorStop(0, '#ffffff');
+  satinGrad2.addColorStop(0.5, '#fce8ee');
+  satinGrad2.addColorStop(1, '#e8c0d0');
+  ctx.fillStyle = satinGrad2;
+  ctx.beginPath();
+  ctx.moveTo(8, -8);
+  ctx.quadraticCurveTo(18, 50, 22, 130);
+  ctx.lineTo(14, 132);
+  ctx.quadraticCurveTo(10, 55, 2, -6);
+  ctx.closePath();
+  ctx.fill();
+
+  // Pembe ince kurdele (arada)
+  ctx.strokeStyle = '#e890a8';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(0, -8);
+  ctx.quadraticCurveTo(3, 70, 5, 140);
+  ctx.stroke();
+
+  // Saten highlight
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(-17, 10);
+  ctx.quadraticCurveTo(-14, 60, -18, 125);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(17, 10);
+  ctx.quadraticCurveTo(14, 60, 18, 125);
+  ctx.stroke();
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function drawBackground() {
+  const bg = ctx.createRadialGradient(cx, cy - 50, 50, cx, cy, Math.max(W,H)*0.8);
+  bg.addColorStop(0, '#151020');
+  bg.addColorStop(0.5, '#0e0c18');
+  bg.addColorStop(1, '#060510');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const glow = ctx.createRadialGradient(cx, cy - 40*scale, 0, cx, cy - 40*scale, 300*scale);
+  glow.addColorStop(0, `rgba(220,130,160,${0.14 + Math.sin(time*0.8)*0.04})`);
+  glow.addColorStop(0.5, `rgba(180,80,120,${0.07 + Math.sin(time*0.8)*0.02})`);
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  stars.forEach(s => {
+    const alpha = 0.15 + Math.sin(time*s.speed + s.phase)*0.35 + 0.35;
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    ctx.fill();
+  });
+}
+
+function drawFallingPetals() {
+  fallingPetals.forEach(p => {
+    p.x += p.vx + Math.sin(time*0.7 + p.rot)*0.3;
+    p.y += p.vy;
+    p.rot += p.rotSpeed;
+    if (p.y > H + 20) { p.y = -20; p.x = Math.random()*W; }
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.globalAlpha = p.opacity;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, p.size*0.6, p.size, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  });
+}
+
+function drawSparkles() {
+  sparkles.forEach(s => {
+    const alpha = Math.max(0, Math.sin(time*s.speed + s.phase));
+    if (alpha < 0.05) return;
+    const r = s.size * alpha;
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.9;
+    const sg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r*4);
+    sg.addColorStop(0, 'rgba(255,220,240,0.8)');
+    sg.addColorStop(1, 'transparent');
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, r*4, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255,255,255,${alpha*0.6})`;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(s.x - r*3, s.y); ctx.lineTo(s.x + r*3, s.y);
+    ctx.moveTo(s.x, s.y - r*3); ctx.lineTo(s.x, s.y + r*3);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  });
+}
+
+function draw() {
+  time += 0.016;
+  bloomProgress = Math.min(bloomProgress + 0.006, 1);
+  const eased = bloomProgress < 0.5
+    ? 2*bloomProgress*bloomProgress
+    : 1 - Math.pow(-2*bloomProgress + 2, 2)/2;
+
+  ctx.clearRect(0, 0, W, H);
+  drawBackground();
+  drawFallingPetals();
+
+  ctx.save();
+  const breathe = 1 + Math.sin(time*0.7)*0.008;
+  ctx.translate(cx, cy);
+  ctx.scale(breathe, breathe);
+  ctx.translate(-cx, -cy);
+
+  // 1. WRAPPER (yaprak yaprak açılan)
+  drawWrapper(eased);
+
+  // 2. Stems (kısa, sadece çiçek altında görünen)
+  if (eased > 0.3) {
+    ctx.globalAlpha = Math.min((eased - 0.3)/0.3, 1);
+    rosePositions.forEach(r => {
+      drawStem(
+        cx + r.dx*scale, cy + (r.dy - 20)*scale,
+        cx + r.dx*0.15*scale, cy + 30*scale,
+        4*scale
+      );
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  // 3. Eucalyptus
+  if (eased > 0.35) {
+    ctx.globalAlpha = Math.min((eased - 0.35)/0.3, 1);
+    drawEucalyptus(cx - 155*scale, cy - 30*scale, -0.5, 100*scale, 6);
+    drawEucalyptus(cx + 155*scale, cy - 30*scale, 0.5, 100*scale, 6);
+    drawEucalyptus(cx - 110*scale, cy - 100*scale, -0.7, 80*scale, 5);
+    drawEucalyptus(cx + 110*scale, cy - 100*scale, 0.7, 80*scale, 5);
+    drawEucalyptus(cx - 55*scale, cy - 170*scale, -0.3, 65*scale, 4);
+    drawEucalyptus(cx + 55*scale, cy - 170*scale, 0.3, 65*scale, 4);
+    ctx.globalAlpha = 1;
+  }
+
+  // 4. Leaves
+  if (eased > 0.4) {
+    ctx.globalAlpha = Math.min((eased - 0.4)/0.3, 1);
+    drawLeaf(cx - 100*scale, cy - 20*scale, 32*scale, -0.8, false);
+    drawLeaf(cx + 100*scale, cy - 20*scale, 32*scale, 0.8, true);
+    drawLeaf(cx - 70*scale, cy + 5*scale, 26*scale, -0.5, false);
+    drawLeaf(cx + 70*scale, cy + 5*scale, 26*scale, 0.5, true);
+    drawLeaf(cx - 135*scale, cy - 60*scale, 28*scale, -1.0, false);
+    drawLeaf(cx + 135*scale, cy - 60*scale, 28*scale, 1.0, true);
+    drawLeaf(cx - 40*scale, cy - 130*scale, 22*scale, -0.4, false);
+    drawLeaf(cx + 40*scale, cy - 130*scale, 22*scale, 0.4, true);
+    ctx.globalAlpha = 1;
+  }
+
+  // 5. Baby's breath
+  if (eased > 0.45) {
+    ctx.globalAlpha = Math.min((eased - 0.45)/0.3, 1);
+    drawBabysBreath(cx - 115*scale, cy - 145*scale, 22*scale, 7);
+    drawBabysBreath(cx + 115*scale, cy - 145*scale, 22*scale, 7);
+    drawBabysBreath(cx, cy - 210*scale, 20*scale, 6);
+    drawBabysBreath(cx - 55*scale, cy - 55*scale, 16*scale, 5);
+    drawBabysBreath(cx + 55*scale, cy - 55*scale, 16*scale, 5);
+    ctx.globalAlpha = 1;
+  }
+
+  // 6. ROSES!
+  rosePositions.forEach(r => {
+    const rBloom = Math.max(0, Math.min((eased - 0.4 - r.delay*0.5)/0.5, 1));
+    if (rBloom <= 0) return;
+    drawRose(cx + r.dx*scale, cy + (r.dy - 20)*scale, r.size*scale, r.colors, rBloom);
+  });
+
+  // 7. Dew drops
+  if (eased > 0.8) {
+    ctx.globalAlpha = Math.min((eased - 0.8)/0.3, 1);
+    drawDewDrop(cx - 30*scale, cy - 65*scale, 3.5*scale);
+    drawDewDrop(cx + 80*scale, cy - 115*scale, 3*scale);
+    drawDewDrop(cx - 100*scale, cy - 95*scale, 2.8*scale);
+    drawDewDrop(cx + 40*scale, cy - 165*scale, 2.5*scale);
+    drawDewDrop(cx - 60*scale, cy - 180*scale, 2*scale);
+    ctx.globalAlpha = 1;
+  }
+
+  // 8. Ribbon (uzun beyaz saten kuyruklarıyla)
+  drawRibbon(eased);
+
+  ctx.restore();
+
+  drawSparkles();
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
 </body>
 </html>
