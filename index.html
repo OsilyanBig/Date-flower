@@ -3,440 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mavi Gül Buketi</title>
+    <title>Senin İçin Bir Sürpriz 💙</title>
     <style>
-        * {
+        /* Temel sayfa ayarları */
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            background: radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1e 70%, #050510 100%);
+            background-color: #0d0d0d; /* Koyu, sofistike arka plan */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ffffff;
             overflow: hidden;
-            font-family: 'Georgia', serif;
-            position: relative;
-            padding: 20px;
+            opacity: 0;
+            animation: fadeInPage 2s ease-in forwards; /* Sayfa yavaşça belirsin */
         }
 
-        .particles {
-            position: fixed;
+        /* Taşıyıcı div animasyonu */
+        .bouquet-container {
+            position: relative;
+            text-align: center;
+            width: 450px;
+            height: auto;
+            transform: scale(0);
+            animation: growBouquet 2s ease-out 1s forwards; /* Buket yavaşça büyüsün */
+        }
+
+        /* Soyut Siyah Ambalajın Geometrik Şekilleri */
+        .wrapper {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            animation: floatParticle linear infinite;
-            opacity: 0;
-        }
-
-        @keyframes floatParticle {
-            0% { transform: translateY(100vh); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(-10vh); opacity: 0; }
-        }
-
-        .title {
-            color: transparent;
-            background: linear-gradient(90deg, #87CEEB, #4FC3F7, #29B6F6, #87CEEB);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            background-clip: text;
-            font-size: 2rem;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 8px;
-            z-index: 2;
-            animation: shineText 3s linear infinite;
-            letter-spacing: 4px;
-        }
-
-        .subtitle {
-            color: rgba(173, 216, 230, 0.7);
-            font-size: 0.85rem;
-            text-align: center;
-            margin-bottom: 20px;
-            z-index: 2;
-            letter-spacing: 6px;
-        }
-
-        @keyframes shineText {
-            to { background-position: 200% center; }
-        }
-
-        .bouquet-container {
-            position: relative;
-            width: 450px;
-            height: 650px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
             z-index: 1;
-            animation: gentleFloat 5s ease-in-out infinite;
         }
 
-        @keyframes gentleFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+        .wrapper div {
+            background-color: rgba(10, 10, 10, 0.95); /* Çok koyu gri/siyah */
+            transform: skew(-15deg);
+            opacity: 0.8;
+            border-radius: 5px;
         }
 
-        @media (max-width: 500px) {
-            .bouquet-container {
-                width: 360px;
-                height: 550px;
-            }
-            .title { font-size: 1.5rem; }
+        /* Güllerin Yerleşimi ve Görünümü */
+        .roses-grid {
+            position: relative;
+            z-index: 2;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none; /* Üzerine gelinemez yap, ambalaja odaklan */
         }
 
-        @media (max-width: 380px) {
-            .bouquet-container {
-                width: 310px;
-                height: 480px;
-            }
+        /* Tek bir gülün CSS sanatıyla oluşturulması */
+        .rose {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            position: relative;
+            background: radial-gradient(circle, #001f5c 10%, #0033a0 40%, #004dcb 80%);
+            box-shadow: 0 5px 15px rgba(0, 85, 255, 0.4); /* Mavi parlamalı gölge efekti */
+            transition: transform 0.3s ease;
         }
 
-        .bouquet-svg {
+        /* Güllerin katmanlı yapısını simüle etmek için iç şekiller */
+        .rose::before,
+        .rose::after {
+            content: '';
+            position: absolute;
             width: 100%;
             height: 100%;
-            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.7));
-        }
-
-        .sparkle {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background: white;
             border-radius: 50%;
-            box-shadow: 0 0 8px 2px rgba(173, 216, 230, 0.9);
-            animation: sparkleAnim 2.5s ease-in-out infinite;
+            background: radial-gradient(circle, #002b7a 20%, #0046b0 50%, #005ce6 90%);
         }
 
-        @keyframes sparkleAnim {
-            0%, 100% { opacity: 0; transform: scale(0); }
-            50% { opacity: 1; transform: scale(1.2); }
+        .rose::before {
+            transform: scale(0.8) translate(5px, 5px);
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .rose::after {
+            transform: scale(0.65) translate(-3px, -3px);
+            box-shadow: -1px -1px 3px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Güllerin rastgele pozisyonlarında hafif oynamalar */
+        .rose:nth-child(even) {
+            transform: rotate(15deg) translate(2px, -3px);
+        }
+        .rose:nth-child(3n) {
+            transform: rotate(-10deg) translate(-1px, 4px);
+        }
+        .rose:nth-child(4n) {
+            transform: scale(1.1) rotate(5deg) translate(3px, 2px);
+        }
+
+        /* Siyah Şerit */
+        .ribbon {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-10deg);
+            width: 100px;
+            height: 25px;
+            background-color: #0a0a0a;
+            border-radius: 5px;
+            z-index: 3;
+            opacity: 0;
+            animation: fadeInRibbon 1s ease-out 2.5s forwards; /* Şerit daha sonra belirsin */
+        }
+
+        /* Alt kısımdaki mesajın stili ve animasyonu */
+        .message {
+            position: relative;
+            font-size: 1.8rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #e0e0e0;
+            text-shadow: 0px 3px 15px rgba(0, 0, 0, 0.9);
+            margin-top: 50px;
+            opacity: 0;
+            z-index: 4;
+            /* Mesajın resimden sonra yavaşça yukarı kayarak gelmesi */
+            animation: slideUpMessage 2s ease-out 3s forwards; 
+        }
+
+        /* Animasyon Keyframe'leri */
+        @keyframes fadeInPage {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes growBouquet {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes fadeInRibbon {
+            from { opacity: 0; top: -40px; }
+            to { opacity: 1; top: -20px; }
+        }
+
+        @keyframes slideUpMessage {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobil cihazlar için duyarlılık (Responsive) */
+        @media (max-width: 600px) {
+            .bouquet-container {
+                width: 90%;
+            }
+            .message {
+                font-size: 1.4rem;
+                padding: 0 15px;
+            }
+            .roses-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+            .rose {
+                width: 40px;
+                height: 40px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="particles" id="particles"></div>
-
-    <div class="title">✦ MAVİ RÜYA ✦</div>
-    <div class="subtitle">BİR BUKET MAVİ</div>
-
     <div class="bouquet-container">
-        <!-- Sparkles -->
-        <div class="sparkle" style="top:15%;left:20%;animation-delay:0s;"></div>
-        <div class="sparkle" style="top:10%;left:75%;animation-delay:0.6s;"></div>
-        <div class="sparkle" style="top:25%;left:15%;animation-delay:1.2s;"></div>
-        <div class="sparkle" style="top:8%;left:50%;animation-delay:1.8s;"></div>
-        <div class="sparkle" style="top:20%;left:80%;animation-delay:0.3s;"></div>
-        <div class="sparkle" style="top:30%;left:85%;animation-delay:1.5s;"></div>
-        <div class="sparkle" style="top:35%;left:10%;animation-delay:0.9s;"></div>
-        <div class="sparkle" style="top:5%;left:35%;animation-delay:2.1s;"></div>
+        <!-- Soyut Siyah Ambalaj -->
+        <div class="wrapper">
+            <div></div><div></div><div></div>
+            <div></div><div></div><div></div>
+        </div>
 
-        <svg class="bouquet-svg" viewBox="0 0 450 650" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <!-- Rose petal gradients -->
-                <radialGradient id="rose1" cx="40%" cy="35%" r="70%">
-                    <stop offset="0%" stop-color="#7EC8F0"/>
-                    <stop offset="45%" stop-color="#2E7BC7"/>
-                    <stop offset="100%" stop-color="#0D3D7A"/>
-                </radialGradient>
-                <radialGradient id="rose2" cx="45%" cy="35%" r="70%">
-                    <stop offset="0%" stop-color="#6DB8E8"/>
-                    <stop offset="50%" stop-color="#1E5FA8"/>
-                    <stop offset="100%" stop-color="#0A2D5C"/>
-                </radialGradient>
-                <radialGradient id="rose3" cx="50%" cy="40%" r="70%">
-                    <stop offset="0%" stop-color="#8FD0F5"/>
-                    <stop offset="45%" stop-color="#3488D0"/>
-                    <stop offset="100%" stop-color="#0F4585"/>
-                </radialGradient>
-                <radialGradient id="rose4" cx="40%" cy="30%" r="65%">
-                    <stop offset="0%" stop-color="#5BA8DC"/>
-                    <stop offset="55%" stop-color="#1957A0"/>
-                    <stop offset="100%" stop-color="#082550"/>
-                </radialGradient>
-                <radialGradient id="roseCenter" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#A8D8F5"/>
-                    <stop offset="60%" stop-color="#2E7BC7"/>
-                    <stop offset="100%" stop-color="#0A2D5C"/>
-                </radialGradient>
-                
-                <!-- Wrapping paper (black) -->
-                <linearGradient id="blackWrap" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#1a1a1a"/>
-                    <stop offset="50%" stop-color="#0d0d0d"/>
-                    <stop offset="100%" stop-color="#000000"/>
-                </linearGradient>
-                <linearGradient id="blackWrap2" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#2a2a2a"/>
-                    <stop offset="100%" stop-color="#0a0a0a"/>
-                </linearGradient>
-                <linearGradient id="wrapShine" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stop-color="rgba(255,255,255,0.05)"/>
-                    <stop offset="50%" stop-color="rgba(255,255,255,0.15)"/>
-                    <stop offset="100%" stop-color="rgba(255,255,255,0.05)"/>
-                </linearGradient>
-                
-                <!-- Ribbon -->
-                <linearGradient id="ribbonSilk" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#1a3a6e"/>
-                    <stop offset="50%" stop-color="#2a5a9e"/>
-                    <stop offset="100%" stop-color="#0a1a4e"/>
-                </linearGradient>
-                
-                <!-- Stem -->
-                <linearGradient id="stemBundle" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stop-color="#1a3a20"/>
-                    <stop offset="50%" stop-color="#2d5a3d"/>
-                    <stop offset="100%" stop-color="#0f2a15"/>
-                </linearGradient>
-                
-                <!-- Filters -->
-                <filter id="roseShadow">
-                    <feDropShadow dx="1" dy="3" stdDeviation="2" flood-color="rgba(0,0,20,0.6)"/>
-                </filter>
-                <filter id="softGlow">
-                    <feGaussianBlur stdDeviation="1.5" result="blur"/>
-                    <feMerge>
-                        <feMergeNode in="blur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                </filter>
-                <filter id="wrapShadow">
-                    <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="rgba(0,0,0,0.8)"/>
-                </filter>
+        <!-- Siyah Şerit -->
+        <div class="ribbon"></div>
 
-                <!-- REUSABLE ROSE SYMBOL -->
-                <symbol id="blueRose" viewBox="-40 -40 80 80">
-                    <!-- Outer opened petals -->
-                    <path d="M-35,-5 Q-40,-25 -25,-35 Q-10,-38 0,-30 Q10,-38 25,-35 Q40,-25 35,-5 Q40,15 25,30 Q10,35 0,28 Q-10,35 -25,30 Q-40,15 -35,-5 Z" 
-                          fill="url(#rose2)" opacity="0.9"/>
-                    
-                    <!-- Second layer petals -->
-                    <path d="M-28,-8 Q-32,-22 -18,-28 Q-5,-30 0,-24 Q5,-30 18,-28 Q32,-22 28,-8 Q30,12 18,22 Q5,27 0,22 Q-5,27 -18,22 Q-30,12 -28,-8 Z" 
-                          fill="url(#rose1)" opacity="0.95"/>
-                    
-                    <!-- Petal separators (outer) -->
-                    <path d="M-25,-18 Q-30,-8 -22,5 Q-15,10 -8,5 Q-12,-5 -18,-15 Z" fill="url(#rose3)" opacity="0.9"/>
-                    <path d="M25,-18 Q30,-8 22,5 Q15,10 8,5 Q12,-5 18,-15 Z" fill="url(#rose3)" opacity="0.9"/>
-                    <path d="M-18,15 Q-22,20 -15,25 Q-5,28 0,22 Q-5,18 -12,15 Z" fill="url(#rose4)" opacity="0.9"/>
-                    <path d="M18,15 Q22,20 15,25 Q5,28 0,22 Q5,18 12,15 Z" fill="url(#rose4)" opacity="0.9"/>
-                    
-                    <!-- Middle petals -->
-                    <path d="M-18,-5 Q-22,-15 -12,-20 Q-3,-22 0,-15 Q3,-22 12,-20 Q22,-15 18,-5 Q20,8 12,15 Q3,18 0,14 Q-3,18 -12,15 Q-20,8 -18,-5 Z" 
-                          fill="url(#rose1)" opacity="0.95"/>
-                    
-                    <!-- Inner unfurled petals -->
-                    <path d="M-12,-3 Q-15,-12 -8,-15 Q0,-16 0,-10 Q8,-16 12,-12 Q15,-3 10,5 Q0,10 -10,5 Q-15,-3 -12,-3 Z" 
-                          fill="url(#rose3)" opacity="0.95"/>
-                    
-                    <!-- Center swirl petals -->
-                    <path d="M-8,-2 Q-10,-8 -4,-10 Q0,-11 2,-7 Q8,-10 10,-4 Q10,3 3,6 Q-4,7 -8,3 Q-10,-2 -8,-2 Z" 
-                          fill="url(#rose2)"/>
-                    <path d="M-5,-1 Q-6,-5 -2,-6 Q3,-6 5,-3 Q7,1 4,4 Q-1,5 -5,2 Q-6,-1 -5,-1 Z" 
-                          fill="url(#rose1)"/>
-                    
-                    <!-- Tight center -->
-                    <path d="M-3,0 Q-3,-3 0,-4 Q3,-3 3,0 Q3,3 0,3 Q-3,3 -3,0 Z" fill="url(#roseCenter)"/>
-                    <circle cx="0" cy="-1" r="1.5" fill="#B8DFF5" opacity="0.9"/>
-                    <circle cx="-0.5" cy="-1.5" r="0.6" fill="#E8F4FF"/>
-                    
-                    <!-- Highlights on outer petals -->
-                    <ellipse cx="-20" cy="-15" rx="4" ry="2" fill="rgba(255,255,255,0.25)" transform="rotate(-30 -20 -15)"/>
-                    <ellipse cx="20" cy="-15" rx="4" ry="2" fill="rgba(255,255,255,0.25)" transform="rotate(30 20 -15)"/>
-                    <ellipse cx="0" cy="-25" rx="5" ry="2" fill="rgba(255,255,255,0.2)"/>
-                </symbol>
-
-                <!-- Leaf symbol -->
-                <symbol id="leaf" viewBox="-15 -30 30 60">
-                    <path d="M0,-28 Q-12,-15 -10,10 Q-5,25 0,28 Q5,25 10,10 Q12,-15 0,-28 Z" 
-                          fill="#1e4d2b" opacity="0.9"/>
-                    <path d="M0,-28 Q0,0 0,28" stroke="#0d2a15" stroke-width="0.8" fill="none"/>
-                    <path d="M0,-15 Q-6,-12 -8,-5" stroke="#0d2a15" stroke-width="0.4" fill="none" opacity="0.6"/>
-                    <path d="M0,-15 Q6,-12 8,-5" stroke="#0d2a15" stroke-width="0.4" fill="none" opacity="0.6"/>
-                    <path d="M0,0 Q-7,3 -8,10" stroke="#0d2a15" stroke-width="0.4" fill="none" opacity="0.6"/>
-                    <path d="M0,0 Q7,3 8,10" stroke="#0d2a15" stroke-width="0.4" fill="none" opacity="0.6"/>
-                    <!-- highlight -->
-                    <path d="M-3,-20 Q-5,-5 -3,15" stroke="rgba(120,180,120,0.3)" stroke-width="1" fill="none"/>
-                </symbol>
-            </defs>
-
-            <!-- ============ BLACK WRAPPING PAPER (BACK LAYERS) ============ -->
-            <g filter="url(#wrapShadow)">
-                <!-- Back fan-like paper layer (spiky edges like reference) -->
-                <path d="M225,340 
-                         L80,290 L100,330 L60,320 L95,360 L55,370 L100,395 L60,420 L110,430
-                         L90,470 L130,455 L120,500 L155,475 L165,520 L190,480
-                         L225,520
-                         L260,480 L285,520 L295,475 L330,500 L320,455 L360,470
-                         L340,430 L390,420 L350,395 L395,370 L355,360 L390,330 L350,320 L370,290
-                         Z" 
-                      fill="url(#blackWrap2)" opacity="0.95"/>
-                
-                <!-- Middle wrap layer -->
-                <path d="M225,350
-                         L110,320 L125,355 L95,350 L130,385 L100,405 L140,415
-                         L120,450 L155,440 L145,480 L180,465
-                         L225,490
-                         L270,465 L305,480 L295,440 L330,450
-                         L310,415 L350,405 L320,385 L355,355 L325,350 L340,320
-                         Z"
-                      fill="url(#blackWrap)"/>
-                
-                <!-- Front cone wrap -->
-                <path d="M225,360
-                         Q160,360 130,390
-                         Q115,430 130,480
-                         Q145,530 175,565
-                         Q200,590 225,595
-                         Q250,590 275,565
-                         Q305,530 320,480
-                         Q335,430 320,390
-                         Q290,360 225,360 Z"
-                      fill="url(#blackWrap)" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-                
-                <!-- Wrap fold lines -->
-                <path d="M170,380 Q160,450 175,560" stroke="rgba(255,255,255,0.06)" stroke-width="1" fill="none"/>
-                <path d="M195,370 Q190,450 195,580" stroke="rgba(255,255,255,0.05)" stroke-width="1" fill="none"/>
-                <path d="M225,365 Q225,450 225,590" stroke="rgba(255,255,255,0.07)" stroke-width="1" fill="none"/>
-                <path d="M255,370 Q260,450 255,580" stroke="rgba(255,255,255,0.05)" stroke-width="1" fill="none"/>
-                <path d="M280,380 Q290,450 275,560" stroke="rgba(255,255,255,0.06)" stroke-width="1" fill="none"/>
-                
-                <!-- Highlight on wrap -->
-                <path d="M200,380 Q195,450 205,580" stroke="url(#wrapShine)" stroke-width="3" fill="none" opacity="0.4"/>
-                
-                <!-- Wrap top edge highlights -->
-                <path d="M225,360 Q160,360 130,390" stroke="rgba(255,255,255,0.1)" stroke-width="1" fill="none"/>
-                <path d="M225,360 Q290,360 320,390" stroke="rgba(255,255,255,0.1)" stroke-width="1" fill="none"/>
-            </g>
-
-            <!-- ============ RIBBON around wrap ============ -->
-            <g>
-                <!-- Ribbon wrap band -->
-                <path d="M155,510 Q225,525 295,510 L292,525 Q225,540 158,525 Z" 
-                      fill="url(#ribbonSilk)" opacity="0.95"/>
-                <path d="M155,510 Q225,525 295,510" stroke="rgba(255,255,255,0.15)" stroke-width="0.5" fill="none"/>
-                
-                <!-- Ribbon tail 1 -->
-                <path d="M200,530 Q195,570 190,610 Q188,620 195,625 L205,620 Q208,590 210,555 Q210,540 205,532 Z" 
-                      fill="url(#ribbonSilk)" opacity="0.9"/>
-                <!-- Ribbon tail 2 -->
-                <path d="M250,530 Q255,570 260,610 Q262,620 255,625 L245,620 Q242,590 240,555 Q240,540 245,532 Z" 
-                      fill="url(#ribbonSilk)" opacity="0.9"/>
-                
-                <!-- Highlights on ribbon -->
-                <path d="M200,540 Q198,580 195,615" stroke="rgba(150,200,255,0.3)" stroke-width="1" fill="none"/>
-                <path d="M250,540 Q252,580 255,615" stroke="rgba(150,200,255,0.3)" stroke-width="1" fill="none"/>
-            </g>
-
-            <!-- ============ SMALL LEAVES peeking from bouquet ============ -->
-            <g opacity="0.85">
-                <use href="#leaf" x="130" y="320" width="25" height="50" transform="rotate(-30 142 345)"/>
-                <use href="#leaf" x="295" y="320" width="25" height="50" transform="rotate(30 307 345)"/>
-                <use href="#leaf" x="105" y="355" width="22" height="44" transform="rotate(-50 116 377)"/>
-                <use href="#leaf" x="323" y="355" width="22" height="44" transform="rotate(50 334 377)"/>
-                <use href="#leaf" x="160" y="335" width="20" height="40" transform="rotate(-15 170 355)"/>
-                <use href="#leaf" x="270" y="335" width="20" height="40" transform="rotate(15 280 355)"/>
-            </g>
-
-            <!-- ============ THE ROSES - Dense cluster like reference ============ -->
-            <!-- Back row (smaller, darker feel) -->
-            <g filter="url(#roseShadow)">
-                <use href="#blueRose" x="130" y="200" width="55" height="55"/>
-                <use href="#blueRose" x="175" y="180" width="58" height="58"/>
-                <use href="#blueRose" x="220" y="170" width="60" height="60"/>
-                <use href="#blueRose" x="265" y="180" width="58" height="58"/>
-                <use href="#blueRose" x="310" y="205" width="55" height="55"/>
-            </g>
-            
-            <!-- Second row -->
-            <g filter="url(#roseShadow)">
-                <use href="#blueRose" x="105" y="240" width="60" height="60"/>
-                <use href="#blueRose" x="155" y="220" width="62" height="62"/>
-                <use href="#blueRose" x="200" y="210" width="65" height="65"/>
-                <use href="#blueRose" x="245" y="210" width="65" height="65"/>
-                <use href="#blueRose" x="290" y="220" width="62" height="62"/>
-                <use href="#blueRose" x="335" y="240" width="60" height="60"/>
-            </g>
-            
-            <!-- Third row -->
-            <g filter="url(#roseShadow)">
-                <use href="#blueRose" x="90" y="280" width="62" height="62"/>
-                <use href="#blueRose" x="135" y="265" width="65" height="65"/>
-                <use href="#blueRose" x="180" y="255" width="68" height="68"/>
-                <use href="#blueRose" x="225" y="250" width="70" height="70"/>
-                <use href="#blueRose" x="275" y="255" width="68" height="68"/>
-                <use href="#blueRose" x="320" y="265" width="65" height="65"/>
-                <use href="#blueRose" x="355" y="280" width="62" height="62"/>
-            </g>
-            
-            <!-- Front row (largest, most visible) -->
-            <g filter="url(#roseShadow)">
-                <use href="#blueRose" x="115" y="315" width="68" height="68"/>
-                <use href="#blueRose" x="165" y="305" width="72" height="72"/>
-                <use href="#blueRose" x="215" y="300" width="75" height="75"/>
-                <use href="#blueRose" x="270" y="305" width="72" height="72"/>
-                <use href="#blueRose" x="325" y="315" width="68" height="68"/>
-            </g>
-            
-            <!-- Bottom accent roses (partially hidden by wrap) -->
-            <g filter="url(#roseShadow)">
-                <use href="#blueRose" x="145" y="340" width="55" height="55" opacity="0.85"/>
-                <use href="#blueRose" x="255" y="340" width="55" height="55" opacity="0.85"/>
-            </g>
-
-            <!-- ============ SPARKLE HIGHLIGHTS on roses ============ -->
-            <g>
-                <circle cx="250" cy="290" r="2" fill="white" opacity="0.9"/>
-                <circle cx="180" cy="310" r="1.5" fill="white" opacity="0.8"/>
-                <circle cx="320" cy="285" r="1.8" fill="white" opacity="0.85"/>
-                <circle cx="215" cy="245" r="1.5" fill="white" opacity="0.7"/>
-                <circle cx="145" cy="270" r="1.2" fill="white" opacity="0.75"/>
-                <circle cx="290" cy="270" r="1.2" fill="white" opacity="0.75"/>
-            </g>
-            
-            <!-- ============ Bottom shadow under wrap ============ -->
-            <ellipse cx="225" cy="605" rx="120" ry="15" fill="rgba(0,0,0,0.5)" opacity="0.6"/>
-        </svg>
+        <!-- Güller -->
+        <div class="roses-grid">
+            <div class="rose"></div><div class="rose"></div><div class="rose"></div>
+            <div class="rose"></div><div class="rose"></div><div class="rose"></div>
+            <div class="rose"></div><div class="rose"></div><div class="rose"></div>
+            <div class="rose"></div><div class="rose"></div><div class="rose"></div>
+            <div class="rose"></div><div class="rose"></div><div class="rose"></div>
+            <div class="rose"></div><div class="rose"></div><div class="rose"></div>
+            <div class="rose"></div><div class="rose"></div><div class="rose"></div>
+            <div class="rose"></div><div class="rose"></div><div class="rose"></div>
+            <div class="rose"></div><div class="rose"></div>
+        </div>
     </div>
+    
+    <!-- Buradaki metni dilediğin gibi değiştirebilirsin -->
+    <div class="message">Mesafelerin hiçbir önemi yok, kalbim hep seninle...</div>
 
-    <script>
-        const particlesContainer = document.getElementById('particles');
-        const colors = [
-            'rgba(100, 149, 237, 0.6)',
-            'rgba(135, 206, 235, 0.5)',
-            'rgba(65, 105, 225, 0.4)',
-            'rgba(173, 216, 230, 0.5)',
-            'rgba(70, 130, 180, 0.4)'
-        ];
-
-        for (let i = 0; i < 35; i++) {
-            const particle = document.createElement('div');
-            particle.classList.add('particle');
-            const size = Math.random() * 3 + 1;
-            particle.style.width = size + 'px';
-            particle.style.height = size + 'px';
-            particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDuration = (Math.random() * 15 + 10) + 's';
-            particle.style.animationDelay = (Math.random() * 15) + 's';
-            if (size > 2) {
-                particle.style.boxShadow = `0 0 ${size * 3}px ${particle.style.background}`;
-            }
-            particlesContainer.appendChild(particle);
-        }
-    </script>
 </body>
 </html>
